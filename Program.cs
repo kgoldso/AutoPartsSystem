@@ -11,9 +11,10 @@ var repo = new SqliteRepository(ConnectionString);
 
 // 3. Инициализация сервисного слоя (новое)
 // Передаем репозиторий в конструкторы сервисов
-var orderService = new OrderService(repo);
-var warehouseService = new WarehouseService(repo);
-var adminService = new AdminService(repo);
+var identityService = new IdentityService(repo);
+var orderService = new OrderService(repo); // Клиентский сервис пока можно оставить без жесткой защиты (либо передать туда identityService и проверять роль 'Client'/'Manager')
+var warehouseService = new WarehouseService(repo, identityService);
+var adminService = new AdminService(repo, identityService);
 
 Console.WriteLine("╔══════════════════════════════════════════════════════════════════╗");
 Console.WriteLine("║              AutoParts Order System — Этап 2                    ║");
