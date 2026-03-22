@@ -32,4 +32,10 @@ public interface IRepository
 
     /// <summary>Меняет статус заказа. Допустимые переходы проверяются в OrderService, не здесь.</summary>
     void UpdateOrderStatus(int orderId, string newStatus);
+
+    /// <summary>Добавляет нового пользователя системы.</summary>
+    void AddUser(User user);
+
+    /// <summary>Ищет пользователя по логину для авторизации.</summary>
+    User? GetUserByLogin(string login);
 }

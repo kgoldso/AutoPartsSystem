@@ -16,6 +16,7 @@ public static class DbInitializer
         conn.Open();
         CreateTables(conn);
         SeedParts(conn);
+        SeedUsers(conn);
     }
 
     private static void CreateTables(SqliteConnection conn)
@@ -40,6 +41,13 @@ public static class DbInitializer
                 FullName TEXT NOT NULL,
                 Phone    TEXT NOT NULL,
                 Email    TEXT NOT NULL UNIQUE
+            );
+
+            CREATE TABLE IF NOT EXISTS Users (
+                Id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                Login        TEXT    NOT NULL UNIQUE,
+                PasswordHash TEXT    NOT NULL,
+                Role         TEXT    NOT NULL
             );
 
             CREATE TABLE IF NOT EXISTS Orders (
@@ -93,5 +101,20 @@ public static class DbInitializer
             cmd.Parameters.AddWithValue("@LeadTimeDays", part.LeadTimeDays);
             cmd.ExecuteNonQuery();
         }
+    }
+    private static void SeedUsers(SqliteConnection conn)
+    {
+        var check = conn.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM Users";
+        if ((long)check.ExecuteScalar()! > 0) return;
+
+        // Создаем базовых сотрудников для тестирования
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO Users (Login, PasswordHash, Role) VALUES 
+            ('admin', 'admin123', 'Admin'),
+            ('manager', 'man123', 'Manager'),
+            ('storekeeper', 'store123', 'Warehouse');";
+        cmd.ExecuteNonQuery();
     }
 }

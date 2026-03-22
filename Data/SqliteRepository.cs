@@ -197,4 +197,43 @@ public class SqliteRepository : IRepository
         OrderDate             = DateTime.Parse(r.GetString(r.GetOrdinal("OrderDate"))),
         EstimatedDeliveryDate = DateTime.Parse(r.GetString(r.GetOrdinal("EstimatedDeliveryDate")))
     };
+
+
+    public void AddUser(User user)
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO Users (Login, PasswordHash, Role)
+            VALUES (@Login, @PasswordHash, @Role)";
+        cmd.Parameters.AddWithValue("@Login", user.Login);
+        cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash); // В реальности тут должен быть хэш
+        cmd.Parameters.AddWithValue("@Role", user.Role);
+        cmd.ExecuteNonQuery();
+
+        var idCmd = conn.CreateCommand();
+        idCmd.CommandText = "SELECT last_insert_rowid()";
+        user.Id = (int)(long)idCmd.ExecuteScalar()!;
+    }
+
+    public User? GetUserByLogin(string login)
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM Users WHERE Login = @Login";
+        cmd.Parameters.AddWithValue("@Login", login);
+        using var reader = cmd.ExecuteReader();
+        
+        if (reader.Read())
+        {
+            return new User
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                Login = reader.GetString(reader.GetOrdinal("Login")),
+                PasswordHash = reader.GetString(reader.GetOrdinal("PasswordHash")),
+                Role = reader.GetString(reader.GetOrdinal("Role"))
+            };
+        }
+        return null;
+    }
 }
