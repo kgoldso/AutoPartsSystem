@@ -236,4 +236,103 @@ public class SqliteRepository : IRepository
         }
         return null;
     }
+
+    public List<Part> SearchParts(string? query, string? group)
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        var conditions = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            conditions.Add("(Name LIKE @Query OR Article LIKE @Query OR CarBrand LIKE @Query OR CarModel LIKE @Query)");
+            cmd.Parameters.AddWithValue("@Query", $"%{query}%");
+        }
+        if (!string.IsNullOrWhiteSpace(group))
+        {
+            conditions.Add("GroupName = @Group");
+            cmd.Parameters.AddWithValue("@Group", group);
+        }
+
+        var where = conditions.Count > 0 ? "WHERE " + string.Join(" AND ", conditions) : "";
+        cmd.CommandText = $"SELECT * FROM Parts {where} ORDER BY Id";
+
+        var parts = new List<Part>();
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            parts.Add(MapPart(reader));
+        return parts;
+    }
+
+    public List<User> GetAllUsers()
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM Users ORDER BY Id";
+        var users = new List<User>();
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            users.Add(new User
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                Login = reader.GetString(reader.GetOrdinal("Login")),
+                PasswordHash = reader.GetString(reader.GetOrdinal("PasswordHash")),
+                Role = reader.GetString(reader.GetOrdinal("Role"))
+            });
+        }
+        return users;
+    }
+
+    public List<Customer> GetAllCustomers()
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM Customers ORDER BY Id";
+        var customers = new List<Customer>();
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            customers.Add(MapCustomer(reader));
+        return customers;
+    }
+
+    public void DeleteUser(int userId)
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM Users WHERE Id = @Id";
+        cmd.Parameters.AddWithValue("@Id", userId);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void UpdatePart(Part part)
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            UPDATE Parts SET Article=@Article, Name=@Name, CarBrand=@CarBrand, CarModel=@CarModel,
+            GroupName=@GroupName, Manufacturer=@Manufacturer, Price=@Price, Stock=@Stock, LeadTimeDays=@LeadTimeDays
+            WHERE Id=@Id";
+        cmd.Parameters.AddWithValue("@Id", part.Id);
+        cmd.Parameters.AddWithValue("@Article", part.Article);
+        cmd.Parameters.AddWithValue("@Name", part.Name);
+        cmd.Parameters.AddWithValue("@CarBrand", part.CarBrand);
+        cmd.Parameters.AddWithValue("@CarModel", part.CarModel);
+        cmd.Parameters.AddWithValue("@GroupName", part.GroupName);
+        cmd.Parameters.AddWithValue("@Manufacturer", part.Manufacturer);
+        cmd.Parameters.AddWithValue("@Price", part.Price);
+        cmd.Parameters.AddWithValue("@Stock", part.Stock);
+        cmd.Parameters.AddWithValue("@LeadTimeDays", part.LeadTimeDays);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void DeletePart(int partId)
+    {
+        using var conn = OpenConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM Parts WHERE Id = @Id";
+        cmd.Parameters.AddWithValue("@Id", partId);
+        cmd.ExecuteNonQuery();
+    }
 }
+

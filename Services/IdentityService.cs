@@ -20,7 +20,7 @@ public class IdentityService
     }
 
     /// <summary>Попытка входа в систему.</summary>
-    public bool Login(string login, string password)
+    public bool Login(string login, string password) // TODO: Аутентификация. Она ищет пользователя в базе через репозиторий и проверяет совпадение пароля.
     {
         var user = _repository.GetUserByLogin(login);
         if (user == null) return false;
@@ -45,7 +45,7 @@ public class IdentityService
     /// Проверка прав доступа. Выбрасывает исключение, если прав нет.
     /// </summary>
     /// <param name="requiredRole">Требуемая роль (например, 'Admin' или 'Manager').</param>
-    public void EnsureRole(string requiredRole)
+    public void EnsureRole(string requiredRole) // TODO: Авторизация. Проверяет, авторизован ли пользователь и соответствует ли его роль требуемой
     {
         if (CurrentUser == null)
             throw new UnauthorizedAccessException("Отказ в доступе: Пользователь не авторизован.");

@@ -38,4 +38,22 @@ public interface IRepository
 
     /// <summary>Ищет пользователя по логину для авторизации.</summary>
     User? GetUserByLogin(string login);
+
+    /// <summary>Поиск запчастей по названию/артикулу и группе.</summary>
+    List<Part> SearchParts(string? query, string? group);
+
+    /// <summary>Список всех пользователей системы.</summary>
+    List<User> GetAllUsers();
+
+    /// <summary>Список всех клиентов.</summary>
+    List<Customer> GetAllCustomers();
+
+    /// <summary>Удаление пользователя по ID.</summary>
+    void DeleteUser(int userId);
+
+    /// <summary>Обновление данных запчасти.</summary>
+    void UpdatePart(Part part);
+
+    /// <summary>Удаление запчасти по ID.</summary>
+    void DeletePart(int partId);
 }

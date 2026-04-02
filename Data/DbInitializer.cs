@@ -17,6 +17,7 @@ public static class DbInitializer
         CreateTables(conn);
         SeedParts(conn);
         SeedUsers(conn);
+        SeedCustomersAndOrders(conn);
     }
 
     private static void CreateTables(SqliteConnection conn)
@@ -65,10 +66,6 @@ public static class DbInitializer
         cmd.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Заполняет 5 тестовых запчастей: по одной на каждую группу (Двигатель, Подвеска, Тормоза, Электрика, Кузов)
-    /// и разные марки авто. Пропускает seed если таблица уже содержит записи.
-    /// </summary>
     private static void SeedParts(SqliteConnection conn)
     {
         var check = conn.CreateCommand();
@@ -77,11 +74,18 @@ public static class DbInitializer
 
         var parts = new[]
         {
-            new Part { Article = "ENG-001", Name = "Масляный фильтр",            CarBrand = "Toyota",     CarModel = "Camry", GroupName = "Двигатель", Manufacturer = "Bosch",    Price = 12.50m,  Stock = 100, LeadTimeDays = 3  },
-            new Part { Article = "SUS-002", Name = "Амортизатор передний",       CarBrand = "BMW",        CarModel = "E46",   GroupName = "Подвеска",  Manufacturer = "Sachs",    Price = 89.00m,  Stock = 25,  LeadTimeDays = 7  },
-            new Part { Article = "BRK-003", Name = "Тормозные колодки передние", CarBrand = "Volkswagen", CarModel = "Golf",  GroupName = "Тормоза",   Manufacturer = "Brembo",   Price = 45.00m,  Stock = 60,  LeadTimeDays = 5  },
-            new Part { Article = "ELC-004", Name = "Аккумулятор 60Ah",           CarBrand = "Ford",       CarModel = "Focus", GroupName = "Электрика", Manufacturer = "Varta",    Price = 120.00m, Stock = 15,  LeadTimeDays = 2  },
-            new Part { Article = "BDY-005", Name = "Крыло переднее левое",       CarBrand = "Audi",       CarModel = "A4",    GroupName = "Кузов",     Manufacturer = "Original", Price = 230.00m, Stock = 8,   LeadTimeDays = 14 }
+            new Part { Article = "ENG-001", Name = "Масляный фильтр",            CarBrand = "Toyota",     CarModel = "Camry",    GroupName = "Двигатель",  Manufacturer = "Bosch",      Price = 12.50m,   Stock = 100, LeadTimeDays = 3  },
+            new Part { Article = "SUS-002", Name = "Амортизатор передний",       CarBrand = "BMW",        CarModel = "E46",      GroupName = "Подвеска",   Manufacturer = "Sachs",      Price = 89.00m,   Stock = 25,  LeadTimeDays = 7  },
+            new Part { Article = "BRK-003", Name = "Тормозные колодки передние", CarBrand = "Volkswagen", CarModel = "Golf",     GroupName = "Тормоза",    Manufacturer = "Brembo",     Price = 45.00m,   Stock = 60,  LeadTimeDays = 5  },
+            new Part { Article = "ELC-004", Name = "Аккумулятор 60Ah",           CarBrand = "Ford",       CarModel = "Focus",    GroupName = "Электрика",  Manufacturer = "Varta",      Price = 120.00m,  Stock = 15,  LeadTimeDays = 2  },
+            new Part { Article = "BDY-005", Name = "Крыло переднее левое",       CarBrand = "Audi",       CarModel = "A4",       GroupName = "Кузов",      Manufacturer = "Original",   Price = 230.00m,  Stock = 8,   LeadTimeDays = 14 },
+            new Part { Article = "ENG-006", Name = "Свеча зажигания иридиевая",  CarBrand = "Honda",      CarModel = "Civic",    GroupName = "Двигатель",  Manufacturer = "NGK",        Price = 18.50m,   Stock = 200, LeadTimeDays = 2  },
+            new Part { Article = "SUS-007", Name = "Рычаг подвески нижний",      CarBrand = "Mercedes",   CarModel = "W204",     GroupName = "Подвеска",   Manufacturer = "Lemförder",  Price = 155.00m,  Stock = 12,  LeadTimeDays = 10 },
+            new Part { Article = "BRK-008", Name = "Тормозной диск вентилируемый",CarBrand = "Toyota",    CarModel = "RAV4",     GroupName = "Тормоза",    Manufacturer = "TRW",        Price = 68.00m,   Stock = 40,  LeadTimeDays = 5  },
+            new Part { Article = "ELC-009", Name = "Генератор 14V 120A",         CarBrand = "BMW",        CarModel = "E90",      GroupName = "Электрика",  Manufacturer = "Valeo",      Price = 340.00m,  Stock = 5,   LeadTimeDays = 12 },
+            new Part { Article = "BDY-010", Name = "Фара головного света LED",   CarBrand = "Volkswagen", CarModel = "Passat",   GroupName = "Кузов",      Manufacturer = "Hella",      Price = 450.00m,  Stock = 7,   LeadTimeDays = 14 },
+            new Part { Article = "ENG-011", Name = "Ремень ГРМ комплект",        CarBrand = "Audi",       CarModel = "A3",       GroupName = "Двигатель",  Manufacturer = "Gates",      Price = 95.00m,   Stock = 30,  LeadTimeDays = 4  },
+            new Part { Article = "SUS-008", Name = "Пружина подвески задняя",    CarBrand = "Ford",       CarModel = "Mondeo",   GroupName = "Подвеска",   Manufacturer = "Kayaba",     Price = 72.00m,   Stock = 18,  LeadTimeDays = 6  },
         };
 
         foreach (var part in parts)
@@ -102,19 +106,49 @@ public static class DbInitializer
             cmd.ExecuteNonQuery();
         }
     }
+
     private static void SeedUsers(SqliteConnection conn)
     {
         var check = conn.CreateCommand();
         check.CommandText = "SELECT COUNT(*) FROM Users";
         if ((long)check.ExecuteScalar()! > 0) return;
 
-        // Создаем базовых сотрудников для тестирования
         var cmd = conn.CreateCommand();
         cmd.CommandText = @"
             INSERT INTO Users (Login, PasswordHash, Role) VALUES 
             ('admin', 'admin123', 'Admin'),
             ('manager', 'man123', 'Manager'),
-            ('storekeeper', 'store123', 'Warehouse');";
+            ('warehouse', 'store123', 'Warehouse'),
+            ('client', 'client123', 'Client');";
         cmd.ExecuteNonQuery();
+    }
+
+    private static void SeedCustomersAndOrders(SqliteConnection conn)
+    {
+        var check = conn.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM Customers";
+        if ((long)check.ExecuteScalar()! > 0) return;
+
+        // Seed customers
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO Customers (FullName, Phone, Email) VALUES 
+            ('Алексей Петров', '+375291234567', 'client@autoparts.by'),
+            ('Мария Иванова', '+375297654321', 'maria@mail.ru'),
+            ('Сергей Козлов', '+375331112233', 'sergei.k@gmail.com');";
+        cmd.ExecuteNonQuery();
+
+        // Seed demo orders
+        var orderCmd = conn.CreateCommand();
+        orderCmd.CommandText = @"
+            INSERT INTO Orders (CustomerId, PartId, Quantity, TotalPrice, Urgent, Status, DeliveryMethod, OrderDate, EstimatedDeliveryDate) VALUES 
+            (1, 1, 4, 50.00, 0, 'Отгружен', 'Доставка', '2026-03-20T10:00:00', '2026-03-23T10:00:00'),
+            (1, 3, 2, 90.00, 0, 'Новый', 'Самовывоз', '2026-03-24T14:30:00', '2026-03-29T14:30:00'),
+            (2, 4, 1, 144.00, 1, 'В обработке', 'Доставка', '2026-03-22T09:00:00', '2026-03-23T09:00:00'),
+            (2, 2, 2, 178.00, 0, 'Отгружен', 'Доставка', '2026-03-18T11:00:00', '2026-03-25T11:00:00'),
+            (3, 5, 1, 276.00, 1, 'Новый', 'Доставка', '2026-03-25T08:00:00', '2026-04-06T08:00:00'),
+            (1, 6, 8, 148.00, 0, 'Отгружен', 'Самовывоз', '2026-03-15T16:00:00', '2026-03-17T16:00:00'),
+            (3, 8, 2, 136.00, 0, 'В обработке', 'Доставка', '2026-03-23T12:00:00', '2026-03-28T12:00:00');";
+        orderCmd.ExecuteNonQuery();
     }
 }

@@ -30,7 +30,8 @@ public class OrderService
     /// <returns>Оформленный заказ.</returns>
     /// <exception cref="InvalidOperationException">Выбрасывается, если товара недостаточно на складе.</exception>
     /// <exception cref="ArgumentException">Выбрасывается, если деталь не найдена.</exception>
-    public Order PlaceOrder(string email, string fullName, string phone, int partId, int quantity, bool isUrgent)
+    public Order PlaceOrder(string email, string fullName, string phone, int partId, int quantity, bool isUrgent) // TODO: Проверяет наличие товара на складе
+    // Автоматический ReserveParts, Бизнес-правила, Работа с клиентом
     {
         if (quantity <= 0)
             throw new ArgumentException("Количество должно быть больше нуля.", nameof(quantity));
@@ -86,7 +87,7 @@ public class OrderService
     /// <summary>
     /// Возвращает историю заказов для указанного клиента.
     /// </summary>
-    public List<Order> GetOrderHistory(int customerId)
+    public List<Order> GetOrderHistory(int customerId) // TODO: Метод фильтрует все заказы из репозитория по CustomerId и сортирует их по дате.
     {
         return _repository.GetAllOrders()
             .Where(o => o.CustomerId == customerId)

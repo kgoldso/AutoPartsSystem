@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AutoParts — современная система управления продажей автозапчастей. Каталог, заказы, склад.">
+    <title>AutoParts — Система автозапчастей</title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ═══ Toast Container ═══ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══ Navbar ═══ -->
+<nav class="navbar" id="navbar">
+    <div class="nav-brand">
+        <img src="/img/logo.png" alt="AutoParts">
+        <span>AutoParts</span>
+    </div>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="#" data-page="home" class="active">Главная</a></li>
+        <li><a href="#" data-page="catalog">Каталог</a></li>
+        <li id="navOrders" style="display:none"><a href="#" data-page="orders">Заказы</a></li>
+        <li id="navWarehouse" style="display:none"><a href="#" data-page="warehouse">Склад</a></li>
+        <li id="navDashboard" style="display:none"><a href="#" data-page="dashboard">Панель</a></li>
+    </ul>
+    <div class="nav-auth" id="navAuth">
+        <a href="#" data-page="login" class="btn btn-primary btn-sm">Войти</a>
+    </div>
+</nav>
+
+<!-- ═══ MODAL: Order ═══ -->
+<div class="modal-overlay" id="orderModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🛒 Оформление заказа</h3>
+            <button class="modal-close" onclick="closeModal('orderModal')">×</button>
+        </div>
+        <div id="orderPartInfo"></div>
+        <form id="orderForm" onsubmit="submitOrder(event)">
+            <div class="form-group">
+                <label>ФИО</label>
+                <input class="form-control" id="orderName" required placeholder="Иван Иванов">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-control" id="orderEmail" type="email" required placeholder="email@example.com">
+            </div>
+            <div class="form-group">
+                <label>Телефон</label>
+                <input class="form-control" id="orderPhone" required placeholder="+375291234567">
+            </div>
+            <div class="form-group">
+                <label>Количество</label>
+                <input class="form-control" id="orderQty" type="number" min="1" value="1" required>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px">
+                <input type="checkbox" id="orderUrgent"> 
+                <label for="orderUrgent" style="margin:0;cursor:pointer">⚡ Срочная доставка (+20% к цене, -2 дня)</label>
+            </div>
+            <input type="hidden" id="orderPartId">
+            <button type="submit" class="btn btn-primary btn-lg">Оформить заказ</button>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Add User ═══ -->
+<div class="modal-overlay" id="userModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>👤 Новый пользователь</h3>
+            <button class="modal-close" onclick="closeModal('userModal')">×</button>
+        </div>
+        <form id="userForm" onsubmit="submitUser(event)">
+            <div class="form-group">
+                <label>Логин</label>
+                <input class="form-control" id="newUserLogin" required>
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input class="form-control" id="newUserPass" type="password" required>
+            </div>
+            <div class="form-group">
+                <label>Роль</label>
+                <select class="form-control" id="newUserRole">
+                    <option value="Client">Клиент</option>
+                    <option value="Manager">Менеджер</option>
+                    <option value="Warehouse">Кладовщик</option>
+                    <option value="Admin">Администратор</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Создать</button>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Inventory ═══ -->
+<div class="modal-overlay" id="inventoryModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>📦 Оприходование товара</h3>
+            <button class="modal-close" onclick="closeModal('inventoryModal')">×</button>
+        </div>
+        <form id="inventoryForm" onsubmit="submitInventory(event)">
+            <div class="form-group">
+                <label>ID запчасти</label>
+                <input class="form-control" id="invPartId" type="number" required>
+            </div>
+            <div class="form-group">
+                <label>Количество</label>
+                <input class="form-control" id="invQty" type="number" min="1" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg">Оприходовать</button>
+        </form>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     PAGE: HOME (Landing)
+     ════════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg">
+            <img src="/img/bg-engine.png" alt="" class="parallax-bg" data-speed="0.3">
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="particles" id="particles"></div>
+        <div class="hero-content">
+            <div class="hero-badge reveal">⚙️ Надёжные автозапчасти</div>
+            <h1 class="reveal">Запчасти для вашего<br><span class="highlight">автомобиля</span></h1>
+            <p class="reveal">Широкий каталог оригинальных и аналоговых комплектующих для Toyota, BMW, Volkswagen, Ford, Audi и других марок</p>
+            <div class="hero-actions reveal">
+                <a href="#" data-page="catalog" class="btn btn-primary btn-lg">Перейти в каталог</a>
+                <a href="#" data-page="login" class="btn btn-ghost btn-lg">Войти в систему</a>
+            </div>
+            <div class="hero-stats reveal">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" data-count="500">0</div>
+                    <div class="hero-stat-label">Запчастей в каталоге</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" data-count="1200">0</div>
+                    <div class="hero-stat-label">Довольных клиентов</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" data-count="15">0</div>
+                    <div class="hero-stat-label">Брендов-поставщиков</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section">
+        <div class="section-header reveal">
+            <div class="section-tag">Преимущества</div>
+            <h2>Почему выбирают нас</h2>
+            <p>Мы обеспечиваем полный цикл — от подбора до доставки</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <div class="feature-icon">🔍</div>
+                <h3>Удобный поиск</h3>
+                <p>Быстрый поиск по артикулу, названию, марке автомобиля или группе запчастей</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon">⚡</div>
+                <h3>Срочная доставка</h3>
+                <p>Возможность экспресс-доставки с сокращением сроков на 2 дня</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon">📊</div>
+                <h3>Прозрачное отслеживание</h3>
+                <p>Статус заказа в реальном времени: от оформления до отгрузки</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon">🏷️</div>
+                <h3>Лучшие бренды</h3>
+                <p>Bosch, Brembo, Sachs, Varta, NGK и другие проверенные производители</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon">🔧</div>
+                <h3>Полный каталог</h3>
+                <p>Двигатель, подвеска, тормоза, электрика, кузов — все группы запчастей</p>
+            </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon">💼</div>
+                <h3>Для бизнеса</h3>
+                <p>Панель управления для менеджеров, кладовщиков и администраторов</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-divider"></div>
+
+    <!-- Popular parts preview -->
+    <section class="section">
+        <div class="section-header reveal">
+            <div class="section-tag">Каталог</div>
+            <h2>Популярные запчасти</h2>
+            <p>Самые востребованные позиции нашего склада</p>
+        </div>
+        <div class="products-grid" id="homeProducts"></div>
+        <div style="text-align:center;margin-top:40px" class="reveal">
+            <a href="#" data-page="catalog" class="btn btn-secondary btn-lg">Посмотреть весь каталог →</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="nav-brand">
+                    <img src="/img/logo.png" alt="AutoParts" style="width:32px;height:32px">
+                    <span>AutoParts</span>
+                </div>
+                <p>Современная система управления продажей автозапчастей с ролевой моделью доступа.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Каталог</h4>
+                <ul>
+                    <li><a href="#">Двигатель</a></li>
+                    <li><a href="#">Подвеска</a></li>
+                    <li><a href="#">Тормоза</a></li>
+                    <li><a href="#">Электрика</a></li>
+                    <li><a href="#">Кузов</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Компания</h4>
+                <ul>
+                    <li><a href="#">О нас</a></li>
+                    <li><a href="#">Контакты</a></li>
+                    <li><a href="#">Доставка</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Поддержка</h4>
+                <ul>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Возврат</a></li>
+                    <li><a href="#">Гарантия</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 AutoParts. Курсовая работа ТРПОСУ.
+        </div>
+    </footer>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     PAGE: LOGIN
+     ════════════════════════════════════════════ -->
+<div class="page" id="page-login">
+    <div class="login-page">
+        <div class="login-bg">
+            <img src="/img/bg-engine.png" alt="">
+        </div>
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-logo">
+                    <img src="/img/logo.png" alt="AutoParts">
+                    <h2>Вход в систему</h2>
+                    <p>Введите логин и пароль</p>
+                </div>
+                <div class="login-error" id="loginError"></div>
+                <form id="loginForm" onsubmit="doLogin(event)">
+                    <div class="form-group">
+                        <label>Логин</label>
+                        <input class="form-control" id="loginInput" required placeholder="Введите логин" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input class="form-control" id="passwordInput" type="password" required placeholder="Введите пароль" autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">Войти</button>
+                </form>
+                <div class="login-footer">
+                    <a href="#" data-page="home">← Вернуться на главную</a>
+                </div>
+                <div class="test-accounts">
+                    <h4>Тестовые аккаунты</h4>
+                    <button class="test-account-btn" onclick="fillLogin('admin','admin123')">
+                        <span>admin / admin123</span>
+                        <span class="test-account-role">Админ</span>
+                    </button>
+                    <button class="test-account-btn" onclick="fillLogin('manager','man123')">
+                        <span>manager / man123</span>
+                        <span class="test-account-role">Менеджер</span>
+                    </button>
+                    <button class="test-account-btn" onclick="fillLogin('warehouse','store123')">
+                        <span>warehouse / store123</span>
+                        <span class="test-account-role">Кладовщик</span>
+                    </button>
+                    <button class="test-account-btn" onclick="fillLogin('client','client123')">
+                        <span>client / client123</span>
+                        <span class="test-account-role">Клиент</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     PAGE: CATALOG
+     ════════════════════════════════════════════ -->
+<div class="page" id="page-catalog" style="padding-top:var(--header-height)">
+    <section class="section">
+        <div class="section-header reveal">
+            <div class="section-tag">Каталог</div>
+            <h2>Все запчасти</h2>
+            <p>Подберите нужную деталь по названию, артикулу или категории</p>
+        </div>
+        <div class="search-bar reveal">
+            <input class="search-input" id="catalogSearch" placeholder="Поиск по названию, артикулу или марке..." oninput="loadCatalog()">
+            <select class="filter-select" id="catalogGroup" onchange="loadCatalog()">
+                <option value="">Все категории</option>
+            </select>
+        </div>
+        <div class="products-grid" id="catalogGrid"></div>
+    </section>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     PAGE: ORDERS (Manager & Client)
+     ════════════════════════════════════════════ -->
+<div class="page" id="page-orders">
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Заказы</div>
+                <div class="sidebar-link active" onclick="loadOrders()">
+                    <span class="icon">📋</span> Все заказы
+                </div>
+                <div class="sidebar-link" onclick="navigateTo('catalog')">
+                    <span class="icon">🔍</span> Каталог
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <h2 style="margin-bottom:24px">📋 Управление заказами</h2>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Список заказов</h3>
+                </div>
+                <div style="overflow-x:auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Запчасть</th>
+                                <th>Кол-во</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     PAGE: WAREHOUSE (Кладовщик)
+     ════════════════════════════════════════════ -->
+<div class="page" id="page-warehouse">
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Склад</div>
+                <div class="sidebar-link active" onclick="loadPending()">
+                    <span class="icon">📦</span> Ожидают отгрузки
+                </div>
+                <div class="sidebar-link" onclick="openModal('inventoryModal')">
+                    <span class="icon">➕</span> Оприходование
+                </div>
+                <div class="sidebar-link" onclick="navigateTo('catalog')">
+                    <span class="icon">🔍</span> Каталог
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <h2 style="margin-bottom:24px">📦 Панель кладовщика</h2>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Заказы, ожидающие отгрузки</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="loadPending()">🔄 Обновить</button>
+                </div>
+                <div style="overflow-x:auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Запчасть</th>
+                                <th>Кол-во</th>
+                                <th>Сумма</th>
+                                <th>Срочный</th>
+                                <th>Дата</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     PAGE: DASHBOARD (Admin)
+     ════════════════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Навигация</div>
+                <div class="sidebar-link active" data-dash="overview" onclick="showDashTab(this,'overview')">
+                    <span class="icon">📊</span> Обзор
+                </div>
+                <div class="sidebar-link" data-dash="sales" onclick="showDashTab(this,'sales')">
+                    <span class="icon">💰</span> Продажи
+                </div>
+                <div class="sidebar-link" data-dash="stock" onclick="showDashTab(this,'stock')">
+                    <span class="icon">📦</span> Остатки
+                </div>
+                <div class="sidebar-link" data-dash="users" onclick="showDashTab(this,'users')">
+                    <span class="icon">👥</span> Пользователи
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Действия</div>
+                <div class="sidebar-link" onclick="navigateTo('catalog')">
+                    <span class="icon">🔍</span> Каталог
+                </div>
+                <div class="sidebar-link" onclick="navigateTo('orders')">
+                    <span class="icon">📋</span> Заказы
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <!-- Overview Tab -->
+            <div id="dash-overview">
+                <h2 style="margin-bottom:24px">📊 Панель администратора</h2>
+                <div class="stats-grid" id="statsGrid"></div>
+                <div class="table-container" style="margin-top:24px">
+                    <div class="table-header">
+                        <h3>Последние заказы</h3>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Клиент</th><th>Запчасть</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr>
+                            </thead>
+                            <tbody id="dashOrdersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Sales Tab -->
+            <div id="dash-sales" style="display:none">
+                <h2 style="margin-bottom:24px">💰 Отчёт по продажам</h2>
+                <div id="salesReport"></div>
+            </div>
+            <!-- Stock Tab -->
+            <div id="dash-stock" style="display:none">
+                <h2 style="margin-bottom:24px">📦 Критические остатки</h2>
+                <div id="stockReport"></div>
+            </div>
+            <!-- Users Tab -->
+            <div id="dash-users" style="display:none">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+                    <h2>👥 Управление пользователями</h2>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('userModal')">+ Новый пользователь</button>
+                </div>
+                <div class="table-container">
+                    <div style="overflow-x:auto">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Логин</th><th>Роль</th><th>Действия</th></tr>
+                            </thead>
+                            <tbody id="usersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

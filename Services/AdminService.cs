@@ -25,7 +25,7 @@ public class AdminService
     /// Генерирует отчет по запчастям, остаток которых ниже критического уровня.
     /// Требует роль Admin.
     /// </summary>
-    public List<Part> GenerateStockReport(int criticalThreshold = 5)
+    public List<Part> GenerateStockReport(int criticalThreshold = 5) // TODO: Выбирает запчасти, количество которых ниже заданного порога (criticalThreshold), что помогает вовремя планировать закупки.
     {
         _identityService.EnsureRole("Admin"); // Защита метода!
 
@@ -39,7 +39,7 @@ public class AdminService
     /// Рассчитывает общую сумму выручки по успешно отгруженным заказам.
     /// Требует роль Admin.
     /// </summary>
-    public decimal GenerateSalesReport()
+    public decimal GenerateSalesReport() // TODO: Суммирует TotalPrice всех заказов, которые имеют финальный статус «Отгружен».
     {
         _identityService.EnsureRole("Admin"); // Защита метода!
 
@@ -51,7 +51,7 @@ public class AdminService
     /// <summary>
     /// Управление пользователями: Регистрация нового сотрудника.
     /// </summary>
-    public User RegisterEmployee(string login, string password, string role)
+    public User RegisterEmployee(string login, string password, string role) // TODO: Позволяет администратору создавать новых пользователей (сотрудников) с проверкой уникальности логина.
     {
         _identityService.EnsureRole("Admin"); // Только Админ может создавать сотрудников
 
