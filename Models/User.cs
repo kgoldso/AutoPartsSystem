@@ -1,4 +1,3 @@
-// Models/User.cs
 namespace AutoPartsSystem.Models;
 
 /// <summary>
@@ -9,11 +8,11 @@ public class User
     public int Id { get; set; }
     
     /// <summary>Логин пользователя (уникальный).</summary>
-    public string Login { get; set; } = string.Empty;
+    public required string Login { get; set; }
     
-    /// <summary>Хэш пароля (в рамках курсовой пока храним просто строку).</summary>
-    public string PasswordHash { get; set; } = string.Empty;
+    /// <summary>Хэш пароля.</summary>
+    public required string PasswordHash { get; set; }
     
     /// <summary>Роль в системе: Admin, Manager, Warehouse, Client.</summary>
-    public string Role { get; set; } = string.Empty; 
+    public required string Role { get; set; } 
 }

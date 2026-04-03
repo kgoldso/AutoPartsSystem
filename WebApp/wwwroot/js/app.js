@@ -65,7 +65,10 @@ function navigateTo(page) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Re-apply reveal animations
-    setTimeout(initRevealAnimations, 100);
+    setTimeout(() => {
+        initRevealAnimations();
+        initScrollFloat();
+    }, 100);
 }
 
 // Click handler for navigation links
@@ -180,10 +183,13 @@ function getStockBadge(stock) {
 
 function renderProductCard(part) {
     const icon = groupIcons[part.groupName] || '🔧';
+    const imagePath = `/img/catalog/part_${part.id}.png`;
+
     return `
         <div class="product-card reveal-scale" onclick="openOrderModal(${part.id})">
             <div class="product-img">
-                <div class="product-icon">${icon}</div>
+                <img src="${imagePath}" alt="${part.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="product-icon" style="display: none;">${icon}</div>
                 ${getStockBadge(part.stock)}
             </div>
             <div class="product-body">
@@ -200,13 +206,47 @@ function renderProductCard(part) {
 }
 
 // ─── Home Page ───
+let sliderInterval = null;
+let sliderIndex = 0;
+
 async function loadHomeProducts() {
     try {
         const parts = await api('/api/catalog');
-        const grid = document.getElementById('homeProducts');
-        grid.innerHTML = parts.slice(0, 6).map(renderProductCard).join('');
+        const track = document.getElementById('homeProducts');
+        // Load up to 10 products for the slider
+        track.innerHTML = parts.slice(0, 10).map(renderProductCard).join('');
+        
+        // Start slider logic
+        startProductSlider();
+        
         setTimeout(initRevealAnimations, 100);
     } catch {}
+}
+
+function startProductSlider() {
+    if (sliderInterval) clearInterval(sliderInterval);
+    
+    const track = document.getElementById('homeProducts');
+    const viewport = track.parentElement;
+    
+    sliderIndex = 0;
+    
+    sliderInterval = setInterval(() => {
+        const cards = track.querySelectorAll('.product-card');
+        if (cards.length === 0) return;
+        
+        // Calculate how many cards fit in view
+        const cardWidth = 300 + 24; // width + gap
+        const visibleCards = Math.floor(viewport.offsetWidth / cardWidth) || 1;
+        const maxIndex = cards.length - visibleCards;
+        
+        sliderIndex++;
+        if (sliderIndex > maxIndex) {
+            sliderIndex = 0;
+        }
+        
+        track.style.transform = `translateX(-${sliderIndex * cardWidth}px)`;
+    }, 4000); // Change every 4 seconds
 }
 
 // ─── Catalog Page ───
@@ -259,6 +299,14 @@ async function openOrderModal(partId) {
             </div>
         `;
         document.getElementById('orderPartId').value = partId;
+        
+        // Autofill for test client
+        if (currentUser.login === 'client') {
+            document.getElementById('orderEmail').value = 'client@autoparts.by';
+            document.getElementById('orderName').value = 'Алексей Петров';
+            document.getElementById('orderPhone').value = '+375291234567';
+        }
+
         openModal('orderModal');
     } catch (err) {
         toast(err.message, 'error');
@@ -282,10 +330,15 @@ async function submitOrder(e) {
         closeModal('orderModal');
         toast(`✅ ${result.message}! Сумма: ${result.totalPrice.toFixed(2)} BYN`);
         document.getElementById('orderForm').reset();
-        loadCatalog();
+        
+        // Refresh catalog if we are there to update stock display
+        if (currentPage === 'catalog') loadCatalog();
+        // Just refresh background data, don't navigate
+        loadOrders(); 
     } catch (err) {
         toast(err.message, 'error');
     }
+    return false;
 }
 
 // ─── Orders Page ───
@@ -302,6 +355,9 @@ async function loadOrders() {
         const orders = await api('/api/orders');
         const body = document.getElementById('ordersBody');
         if (!body) return;
+
+        const isManager = ['Admin', 'Manager'].includes(currentUser.role);
+
         body.innerHTML = orders.map(o => `
             <tr>
                 <td><strong>#${o.id}</strong></td>
@@ -312,8 +368,8 @@ async function loadOrders() {
                 <td><span class="status ${getStatusClass(o.status)}">${o.status}</span></td>
                 <td>${new Date(o.orderDate).toLocaleDateString('ru')}</td>
                 <td>
-                    ${o.status === 'Новый' ? `<button class="btn btn-sm btn-secondary" onclick="updateOrderStatus(${o.id},'В обработке')">В работу</button>` : ''}
-                    ${o.status === 'Новый' || o.status === 'В обработке' ? `<button class="btn btn-sm btn-danger" onclick="updateOrderStatus(${o.id},'Отменен')" style="margin-left:4px">Отмена</button>` : ''}
+                    ${isManager && o.status === 'Новый' ? `<button class="btn btn-sm btn-secondary" onclick="updateOrderStatus(${o.id},'В обработке')">В работу</button>` : ''}
+                    ${isManager && (o.status === 'Новый' || o.status === 'В обработке') ? `<button class="btn btn-sm btn-danger" onclick="updateOrderStatus(${o.id},'Отменен')" style="margin-left:4px">Отмена</button>` : ''}
                 </td>
             </tr>
         `).join('');
@@ -608,6 +664,57 @@ function initNavScroll() {
     });
 }
 
+// ─── Scroll Float Animation (New) ───
+function initScrollFloat() {
+    // Target main headings only (Section H2, Dashboard H2)
+    // Removed .hero h1 and .login-logo h2 to prevent disappearing text and layout issues
+    const targets = document.querySelectorAll('.section-header h2, .main-content h2');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    targets.forEach(el => {
+        if (el.classList.contains('scroll-float-ready')) return;
+        
+        // Helper to process nodes recursively
+        const processNode = (node, charCounter = 0) => {
+            let count = charCounter;
+            const fragment = document.createDocumentFragment();
+            
+            [...node.childNodes].forEach(child => {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    const text = child.textContent;
+                    [...text].forEach(char => {
+                        const span = document.createElement('span');
+                        span.className = 'char';
+                        span.textContent = char === ' ' ? '\u00A0' : char;
+                        span.style.setProperty('--char-index', count++);
+                        fragment.appendChild(span);
+                    });
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    const cloned = child.cloneNode(false); // Shallow clone element
+                    const result = processNode(child, count);
+                    cloned.appendChild(result.fragment);
+                    count = result.count;
+                    fragment.appendChild(cloned);
+                }
+            });
+            return { fragment, count };
+        };
+
+        const { fragment } = processNode(el);
+        el.innerHTML = '';
+        el.appendChild(fragment);
+        el.classList.add('scroll-float', 'scroll-float-ready');
+        observer.observe(el);
+    });
+}
+
 // ─── Counter animation ───
 function animateCounters() {
     const counters = document.querySelectorAll('[data-count]');
@@ -654,6 +761,7 @@ function initParticles() {
 }
 
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════
 
@@ -662,8 +770,150 @@ document.addEventListener('DOMContentLoaded', async () => {
     initNavScroll();
     initParticles();
     initRevealAnimations();
+    initScrollFloat();
     animateCounters();
     
     await checkAuth();
     loadHomeProducts();
 });
+
+// ─── Navbar Search Logic ───
+document.addEventListener('DOMContentLoaded', () => {
+    const navSearch = document.getElementById('navSearch');
+    if (navSearch) {
+        navSearch.addEventListener('input', (e) => {
+            const q = e.target.value;
+            if (currentPage !== 'catalog') {
+                navigateTo('catalog');
+            }
+            // Sync with catalog page search input
+            const catalogSearch = document.getElementById('catalogSearch');
+            if (catalogSearch) {
+                catalogSearch.value = q;
+                loadCatalog();
+            }
+        });
+    }
+});
+
+// ─── Testimonials Typewriter Logic ───
+const testimonialsData = [
+    { text: 'Отличный сервис! Нашел редкую деталь для своей Audi за считанные минуты. Доставили вовремя.', author: 'Иван Иванов', role: 'Владелец Audi A6' },
+    { text: 'Лучший магазин автозапчастей. Цены ниже, чем у конкурентов, а качество на высоте.', author: 'Алексей Соколов', role: 'Владелец VW Passat' },
+    { text: 'Покупал тормозные колодки Brembo. Оригинал, все проверки прошли. Рекомендую!', author: 'Дмитрий Волков', role: 'Владелец BMW 3' },
+    { text: 'Срочная доставка реально работает. Выручили, когда машина встала в самый неподходящий момент.', author: 'Максим Кузнецов', role: 'Владелец Ford Focus' },
+    { text: 'Удобный интерфейс сайта. Поиск по артикулу находит все, что нужно.', author: 'Артем Морозов', role: 'Владелец Mazda 6' },
+    { text: 'Профессиональные консультанты. Помогли подобрать масло и фильтры для ТО.', author: 'Игорь Новиков', role: 'Владелец Skoda Octavia' },
+    { text: 'Заказывал фары на BMW. Пришли в идеальном состоянии, упакованы на совесть.', author: 'Константин Козлов', role: 'Владелец BMW 5' },
+    { text: 'Большой выбор брендов. Можно найти как премиум, так и качественные аналоги.', author: 'Николай Лебедев', role: 'Владелец Mercedes E-class' },
+    { text: 'Система лояльности радует. Приятно получать скидки на следующие заказы.', author: 'Виктор Павлов', role: 'Владелец Honda CR-V' },
+    { text: 'Работаю с AutoParts уже год. Ни разу не подвели с качеством запчастей.', author: 'Олег Семенов', role: 'Владелец Kia Sportage' },
+    { text: 'Самый быстрый подбор запчастей. Не нужно часами ждать ответа.', author: 'Михаил Голубев', role: 'Владелец Hyundai Solaris' },
+    { text: 'Качество обслуживания на европейском уровне. Очень доволен покупкой.', author: 'Павел Виноградов', role: 'Владелец Volvo S60' },
+    { text: 'Всегда актуальное наличие на складе. Что на сайте, то и в магазине.', author: 'Андрей Богданов', role: 'Владелец Mitsubishi Lancer' },
+    { text: 'Удобно отслеживать статус заказа в личном кабинете.', author: 'Роман Воробьев', role: 'Владелец Nissan Qashqai' },
+    { text: 'Запчасти для японцев всегда в наличии. Нашел все для своей Toyota.', author: 'Станислав Федоров', role: 'Владелец Toyota RAV4' },
+    { text: 'Приятные цены и оперативная работа склада. Всем советую этот сервис.', author: 'Денис Щербаков', role: 'Владелец Opel Astra' },
+    { text: 'Нашел оригинальный радиатор, который не мог найти в других местах. Спасибо!', author: 'Евгений Казаков', role: 'Владелец Subaru Forester' },
+    { text: 'Прозрачная система оплаты и никаких скрытых платежей.', author: 'Владимир Белов', role: 'Владелец Lexus RX' },
+    { text: 'Доставка в регионы работает отлично. Заказ пришел быстрее, чем ожидал.', author: 'Валентин Соловьев', role: 'Владелец Renault Duster' },
+    { text: 'Надежный партнер для моего автосервиса. Заказываю запчасти только здесь.', author: 'Григорий Поляков', role: 'Техдиректор АвтоМир' }
+];
+
+async function typeText(element, text, speed = 60) {
+    element.textContent = '';
+    for (let i = 0; i < text.length; i++) {
+        element.textContent += text[i];
+        await new Promise(r => setTimeout(r, speed));
+    }
+}
+
+async function deleteText(element, speed = 30) {
+    let text = element.textContent;
+    while (text.length > 0) {
+        text = text.slice(0, -1);
+        element.textContent = text;
+        await new Promise(r => setTimeout(r, speed));
+    }
+}
+
+
+async function updateTestimonials(usedIndices) {
+    const cards = [0, 1, 2];
+    const currentData = [];
+    
+    // 1. Pick 3 unique random testimonials
+    const localUsed = [];
+    for (let i = 0; i < 3; i++) {
+        let idx;
+        do {
+            idx = Math.floor(Math.random() * testimonialsData.length);
+        } while (localUsed.includes(idx));
+        localUsed.push(idx);
+        currentData.push(testimonialsData[idx]);
+    }
+
+    // 2. Set authors and roles immediately (before typing)
+    cards.forEach(i => {
+        document.getElementById('author-' + i).textContent = currentData[i].author;
+        document.getElementById('role-' + i).textContent = currentData[i].role;
+    });
+
+    // 3. Find max length to normalize typing duration
+    const maxLen = Math.max(...currentData.map(d => d.text.length));
+    const typeSpeed = 60;
+
+    // 4. Type text in synchronized steps
+    for (let charIdx = 0; charIdx < maxLen; charIdx++) {
+        cards.forEach(i => {
+            const el = document.getElementById('typewriter-' + i);
+            const fullText = currentData[i].text;
+            if (charIdx < fullText.length) {
+                if (charIdx === 0) el.textContent = '';
+                el.textContent += fullText[charIdx];
+            }
+        });
+        await new Promise(r => setTimeout(r, typeSpeed));
+    }
+
+    // 5. Wait for reading
+    await new Promise(r => setTimeout(r, 10000));
+
+    // 6. Delete text in synchronized steps
+    for (let charIdx = 0; charIdx < maxLen; charIdx++) {
+        cards.forEach(i => {
+            const el = document.getElementById('typewriter-' + i);
+            let text = el.textContent;
+            if (text.length > 0) {
+                el.textContent = text.slice(0, -1);
+            }
+        });
+        // Constant step duration for all cards
+        await new Promise(r => setTimeout(r, 30)); 
+    }
+
+    // 7. Short pause and repeat
+    await new Promise(r => setTimeout(r, 1500));
+    updateTestimonials(usedIndices);
+}
+
+function initTestimonials() {
+    const section = document.getElementById('testimonials');
+    if (!section) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            updateTestimonials(new Set());
+            observer.disconnect();
+        }
+    }, { threshold: 0.1 });
+
+    observer.observe(section);
+}
+
+// Ensure initTestimonials is called
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTestimonials);
+} else {
+    initTestimonials();
+}

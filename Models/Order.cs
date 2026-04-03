@@ -1,4 +1,3 @@
-// Models/Order.cs
 namespace AutoPartsSystem.Models;
 
 /// <summary>
@@ -8,21 +7,31 @@ namespace AutoPartsSystem.Models;
 public class Order
 {
     public int Id { get; set; }
+    
+    /// <summary>ID пользователя (аккаунта), совершившего заказ.</summary>
+    public int UserId { get; set; }
+    
     public int CustomerId { get; set; }
+    
+    // Snapshot of customer data at the time of order
+    public required string CustomerFullName { get; set; }
+    public required string CustomerEmail { get; set; }
+    public required string CustomerPhone { get; set; }
+
     public int PartId { get; set; }
     public int Quantity { get; set; }
 
-    /// <summary>Итоговая сумма с учётом срочности (Price * Quantity * 1.2 если Urgent).</summary>
+    /// <summary>Итоговая сумма с учётом срочности.</summary>
     public decimal TotalPrice { get; set; }
 
-    /// <summary>Срочная поставка: цена ×1.2, срок поставки −2 дня (минимум 1 день).</summary>
+    /// <summary>Срочная поставка.</summary>
     public bool Urgent { get; set; }
 
-    /// <summary>Текущий статус заказа. Отмена доступна только для статусов Новый и В обработке.</summary>
-    public string Status { get; set; } = "Новый";
+    /// <summary>Текущий статус заказа.</summary>
+    public required string Status { get; set; }
 
-    /// <summary>Способ получения: Самовывоз или Доставка.</summary>
-    public string DeliveryMethod { get; set; } = string.Empty;
+    /// <summary>Способ получения.</summary>
+    public required string DeliveryMethod { get; set; }
 
     public DateTime OrderDate { get; set; }
     public DateTime EstimatedDeliveryDate { get; set; }

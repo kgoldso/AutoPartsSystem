@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using AutoPartsSystem.Data;
 using AutoPartsSystem.Models;
 
@@ -8,56 +5,53 @@ namespace AutoPartsSystem.Services;
 
 /// <summary>
 /// Сервис для административных задач и аналитики.
+/// Использует Result Pattern и асинхронность.
 /// </summary>
-public class AdminService
+public class AdminService(IRepository repository, IdentityService identityService)
 {
-    private readonly IRepository _repository;
-    private readonly IdentityService _identityService; // Добавили зависимость
-
-    // Обновляем конструктор
-    public AdminService(IRepository repository, IdentityService identityService)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
-    }
-
     /// <summary>
     /// Генерирует отчет по запчастям, остаток которых ниже критического уровня.
-    /// Требует роль Admin.
     /// </summary>
-    public List<Part> GenerateStockReport(int criticalThreshold = 5) // TODO: Выбирает запчасти, количество которых ниже заданного порога (criticalThreshold), что помогает вовремя планировать закупки.
+    public async Task<Result<List<Part>>> GenerateStockReportAsync(int criticalThreshold = 5)
     {
-        _identityService.EnsureRole("Admin"); // Защита метода!
+        var roleCheck = identityService.EnsureRole("Admin");
+        if (!roleCheck.IsSuccess) return Result<List<Part>>.Failure(roleCheck.Error!);
 
-        return _repository.GetAllParts()
+        var allParts = await repository.GetAllPartsAsync();
+        var report = allParts
             .Where(p => p.Stock < criticalThreshold)
             .OrderBy(p => p.Stock)
             .ToList();
+        
+        return Result<List<Part>>.Success(report);
     }
 
     /// <summary>
     /// Рассчитывает общую сумму выручки по успешно отгруженным заказам.
-    /// Требует роль Admin.
     /// </summary>
-    public decimal GenerateSalesReport() // TODO: Суммирует TotalPrice всех заказов, которые имеют финальный статус «Отгружен».
+    public async Task<Result<decimal>> GenerateSalesReportAsync()
     {
-        _identityService.EnsureRole("Admin"); // Защита метода!
+        var roleCheck = identityService.EnsureRole("Admin");
+        if (!roleCheck.IsSuccess) return Result<decimal>.Failure(roleCheck.Error!);
 
-        return _repository.GetAllOrders()
+        var allOrders = await repository.GetAllOrdersAsync();
+        var totalSales = allOrders
             .Where(o => o.Status.Equals("Отгружен", StringComparison.OrdinalIgnoreCase))
             .Sum(o => o.TotalPrice);
+            
+        return Result<decimal>.Success(totalSales);
     }
 
     /// <summary>
     /// Управление пользователями: Регистрация нового сотрудника.
     /// </summary>
-    public User RegisterEmployee(string login, string password, string role) // TODO: Позволяет администратору создавать новых пользователей (сотрудников) с проверкой уникальности логина.
+    public async Task<Result<User>> RegisterEmployeeAsync(string login, string password, string role)
     {
-        _identityService.EnsureRole("Admin"); // Только Админ может создавать сотрудников
+        var roleCheck = identityService.EnsureRole("Admin");
+        if (!roleCheck.IsSuccess) return Result<User>.Failure(roleCheck.Error!);
 
-        // Проверяем, существует ли уже такой логин
-        if (_repository.GetUserByLogin(login) != null)
-            throw new InvalidOperationException($"Пользователь с логином {login} уже существует.");
+        if (await repository.GetUserByLoginAsync(login) != null)
+            return Result<User>.Failure($"Пользователь с логином {login} уже существует.");
 
         var newUser = new User 
         { 
@@ -66,7 +60,7 @@ public class AdminService
             Role = role 
         };
         
-        _repository.AddUser(newUser);
-        return newUser;
+        await repository.AddUserAsync(newUser);
+        return Result<User>.Success(newUser);
     }
 }

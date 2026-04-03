@@ -1,59 +1,33 @@
-// Data/IRepository.cs
 using AutoPartsSystem.Models;
 
 namespace AutoPartsSystem.Data;
 
 /// <summary>
-/// Контракт доступа к данным. Реализации: SqliteRepository (этап 1–3), PostgresRepository (этап 4+).
-/// Сервисы зависят только от этого интерфейса — замена БД не затрагивает бизнес-логику.
+/// Контракт доступа к данным. Все операции асинхронны.
 /// </summary>
 public interface IRepository
 {
-    /// <summary>Добавляет запчасть в каталог. После вставки заполняет Part.Id.</summary>
-    void AddPart(Part part);
+    Task AddPartAsync(Part part);
+    Task<List<Part>> GetAllPartsAsync();
+    Task<Part?> GetPartByIdAsync(int id);
+    Task UpdatePartStockAsync(int partId, int newStock);
 
-    List<Part> GetAllParts();
-    Part? GetPartById(int id);
+    Task AddCustomerAsync(Customer customer);
+    Task<Customer?> FindCustomerByEmailAsync(string email);
+    Task UpdateCustomerAsync(Customer customer);
 
-    /// <summary>Обновляет остаток на складе. Вызывается при оформлении и отмене заказа.</summary>
-    void UpdatePartStock(int partId, int newStock);
+    Task AddOrderAsync(Order order);
+    Task<List<Order>> GetAllOrdersAsync();
+    Task<Order?> GetOrderByIdAsync(int id);
+    Task UpdateOrderStatusAsync(int orderId, string newStatus);
 
-    /// <summary>Добавляет клиента. После вставки заполняет Customer.Id.</summary>
-    void AddCustomer(Customer customer);
+    Task AddUserAsync(User user);
+    Task<User?> GetUserByLoginAsync(string login);
+    Task<List<User>> GetAllUsersAsync();
+    Task DeleteUserAsync(int userId);
 
-    /// <summary>Ищет клиента по email. Возвращает null если не найден — тогда создаётся новый.</summary>
-    Customer? FindCustomerByEmail(string email);
-
-    /// <summary>Добавляет заказ. После вставки заполняет Order.Id.</summary>
-    void AddOrder(Order order);
-
-    List<Order> GetAllOrders();
-    Order? GetOrderById(int id);
-
-    /// <summary>Меняет статус заказа. Допустимые переходы проверяются в OrderService, не здесь.</summary>
-    void UpdateOrderStatus(int orderId, string newStatus);
-
-    /// <summary>Добавляет нового пользователя системы.</summary>
-    void AddUser(User user);
-
-    /// <summary>Ищет пользователя по логину для авторизации.</summary>
-    User? GetUserByLogin(string login);
-
-    /// <summary>Поиск запчастей по названию/артикулу и группе.</summary>
-    List<Part> SearchParts(string? query, string? group);
-
-    /// <summary>Список всех пользователей системы.</summary>
-    List<User> GetAllUsers();
-
-    /// <summary>Список всех клиентов.</summary>
-    List<Customer> GetAllCustomers();
-
-    /// <summary>Удаление пользователя по ID.</summary>
-    void DeleteUser(int userId);
-
-    /// <summary>Обновление данных запчасти.</summary>
-    void UpdatePart(Part part);
-
-    /// <summary>Удаление запчасти по ID.</summary>
-    void DeletePart(int partId);
+    Task<List<Part>> SearchPartsAsync(string? query, string? group);
+    Task<List<Customer>> GetAllCustomersAsync();
+    Task UpdatePartAsync(Part part);
+    Task DeletePartAsync(int partId);
 }

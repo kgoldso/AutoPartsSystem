@@ -6,7 +6,7 @@
     <meta name="description" content="AutoParts — современная система управления продажей автозапчастей. Каталог, заказы, склад.">
     <title>AutoParts — Система автозапчастей</title>
     <link rel="icon" href="/img/logo.png" type="image/png">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
 <body>
 
@@ -15,19 +15,30 @@
 
 <!-- ═══ Navbar ═══ -->
 <nav class="navbar" id="navbar">
-    <div class="nav-brand">
-        <img src="/img/logo.png" alt="AutoParts">
-        <span>AutoParts</span>
+    <div class="nav-left" style="display: flex; align-items: center; gap: 30px;">
+        <div class="nav-brand" data-page="home">
+            <span>AutoParts</span>
+        </div>
+        <ul class="nav-links" id="navLinksLeft">
+            <li><a href="#" data-page="home" class="active">Главная</a></li>
+            <li><a href="#" data-page="catalog">Каталог</a></li>
+            <li id="navOrders" style="display:none"><a href="#" data-page="orders">Заказы</a></li>
+        </ul>
     </div>
-    <ul class="nav-links" id="navLinks">
-        <li><a href="#" data-page="home" class="active">Главная</a></li>
-        <li><a href="#" data-page="catalog">Каталог</a></li>
-        <li id="navOrders" style="display:none"><a href="#" data-page="orders">Заказы</a></li>
-        <li id="navWarehouse" style="display:none"><a href="#" data-page="warehouse">Склад</a></li>
-        <li id="navDashboard" style="display:none"><a href="#" data-page="dashboard">Панель</a></li>
-    </ul>
-    <div class="nav-auth" id="navAuth">
-        <a href="#" data-page="login" class="btn btn-primary btn-sm">Войти</a>
+    
+    <div class="nav-right" style="display: flex; align-items: center; gap: 25px;">
+        <div class="nav-search-container">
+            <input type="text" id="navSearch" placeholder="Поиск деталей..." class="nav-search-input">
+            <div class="nav-search-icon">🔍</div>
+        </div>
+        <ul class="nav-links" id="navLinksRight">
+            
+            <li id="navWarehouse" style="display:none"><a href="#" data-page="warehouse">Склад</a></li>
+            <li id="navDashboard" style="display:none"><a href="#" data-page="dashboard">Панель</a></li>
+        </ul>
+        <div class="nav-auth" id="navAuth">
+            <a href="#" data-page="login" class="btn btn-primary btn-sm">Войти</a>
+        </div>
     </div>
 </nav>
 
@@ -39,7 +50,7 @@
             <button class="modal-close" onclick="closeModal('orderModal')">×</button>
         </div>
         <div id="orderPartInfo"></div>
-        <form id="orderForm" onsubmit="submitOrder(event)">
+        <form id="orderForm" onsubmit="submitOrder(event); return false;">
             <div class="form-group">
                 <label>ФИО</label>
                 <input class="form-control" id="orderName" required placeholder="Иван Иванов">
@@ -125,14 +136,13 @@
 
     <!-- Hero -->
     <section class="hero">
+        <div class="aurora-bg" id="aurora-bg"></div>
         <div class="hero-bg">
-            <img src="/img/bg-engine.png" alt="" class="parallax-bg" data-speed="0.3">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS4_3oipa1XeHNk9oOOrYGUtdZoWadNuv2E66PEG4q32EZ3w0R2qtBuA0v8FbW_U7DOzmqQ1jWMmBkoUgM9j19XILdl09OC4IDyitBbCC7q0Z796gxM2MXG4WbRlHEiPL_5zUkEEczJJgH2LWsjlbtQFlghxzeU3uoPOvfH2901se1TZvng07X-Hg5sWkednOVS7nzSZpJyVXfiA_LJ6HOKgrDAKlqMnGHS-cvyOszUE3S1hdCJ_VBMa-9o5vRmW8WnSdQfhsgFxbT" alt="Performance Porsche">
         </div>
         <div class="hero-overlay"></div>
-        <div class="particles" id="particles"></div>
         <div class="hero-content">
-            <div class="hero-badge reveal">⚙️ Надёжные автозапчасти</div>
-            <h1 class="reveal">Запчасти для вашего<br><span class="highlight">автомобиля</span></h1>
+            <h1 class="reveal shiny-text">Запчасти для вашего<br><span class="highlight">автомобиля</span></h1>
             <p class="reveal">Широкий каталог оригинальных и аналоговых комплектующих для Toyota, BMW, Volkswagen, Ford, Audi и других марок</p>
             <div class="hero-actions reveal">
                 <a href="#" data-page="catalog" class="btn btn-primary btn-lg">Перейти в каталог</a>
@@ -156,13 +166,13 @@
     </section>
 
     <!-- Features -->
-    <section class="section">
+    <section class="section features-section">
         <div class="section-header reveal">
             <div class="section-tag">Преимущества</div>
-            <h2>Почему выбирают нас</h2>
-            <p>Мы обеспечиваем полный цикл — от подбора до доставки</p>
+            <h2>ПОЧЕМУ AUTOPARTS?</h2>
+            <p>Мы не просто продаем запчасти. Мы обеспечиваем структурную целостность и производительность.</p>
         </div>
-        <div class="features-grid">
+        <div class="features-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="feature-card reveal">
                 <div class="feature-icon">🔍</div>
                 <h3>Удобный поиск</h3>
@@ -174,24 +184,9 @@
                 <p>Возможность экспресс-доставки с сокращением сроков на 2 дня</p>
             </div>
             <div class="feature-card reveal">
-                <div class="feature-icon">📊</div>
-                <h3>Прозрачное отслеживание</h3>
-                <p>Статус заказа в реальном времени: от оформления до отгрузки</p>
-            </div>
-            <div class="feature-card reveal">
                 <div class="feature-icon">🏷️</div>
                 <h3>Лучшие бренды</h3>
                 <p>Bosch, Brembo, Sachs, Varta, NGK и другие проверенные производители</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon">🔧</div>
-                <h3>Полный каталог</h3>
-                <p>Двигатель, подвеска, тормоза, электрика, кузов — все группы запчастей</p>
-            </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon">💼</div>
-                <h3>Для бизнеса</h3>
-                <p>Панель управления для менеджеров, кладовщиков и администраторов</p>
             </div>
         </div>
     </section>
@@ -202,12 +197,60 @@
     <section class="section">
         <div class="section-header reveal">
             <div class="section-tag">Каталог</div>
-            <h2>Популярные запчасти</h2>
-            <p>Самые востребованные позиции нашего склада</p>
+            <h2>ПОПУЛЯРНЫЕ КОМПОНЕНТЫ</h2>
+            <p>Оцените наш полный каталог высокопроизводительных запчастей</p>
         </div>
-        <div class="products-grid" id="homeProducts"></div>
-        <div style="text-align:center;margin-top:40px" class="reveal">
-            <a href="#" data-page="catalog" class="btn btn-secondary btn-lg">Посмотреть весь каталог →</a>
+        <div class="slider-viewport reveal">
+            <div class="slider-track" id="homeProducts"></div>
+        </div>
+    </section>
+
+    
+    <div class='glow-divider'></div>
+
+    <!-- Testimonials -->
+    <section class='section testimonials-section' id='testimonials'>
+        <div class='testimonials-bg-image'></div>
+        <div class='section-header reveal'>
+            <div class='section-tag'>Отзывы</div>
+            <h2>ЧТО ГОВОРЯТ НАШИ КЛИЕНТЫ</h2>
+            <p>Мы ценим доверие каждого клиента и стремимся предоставлять лучший сервис.</p>
+        </div>
+        <div class='testimonials-grid'>
+            <div class='testimonial-card reveal'>
+                <div class='testimonial-quote'>“</div>
+                <div class='testimonial-text' id='typewriter-0'></div>
+                <div class='testimonial-footer'>
+                    <div class='testimonial-author' id='author-0'></div>
+                    <div class='testimonial-role' id='role-0'></div>
+                </div>
+            </div>
+            <div class='testimonial-card reveal'>
+                <div class='testimonial-quote'>“</div>
+                <div class='testimonial-text' id='typewriter-1'></div>
+                <div class='testimonial-footer'>
+                    <div class='testimonial-author' id='author-1'></div>
+                    <div class='testimonial-role' id='role-1'></div>
+                </div>
+            </div>
+            <div class='testimonial-card reveal'>
+                <div class='testimonial-quote'>“</div>
+                <div class='testimonial-text' id='typewriter-2'></div>
+                <div class='testimonial-footer'>
+                    <div class='testimonial-author' id='author-2'></div>
+                    <div class='testimonial-role' id='role-2'></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Call to Action -->
+    <section class="section" style="padding-top: 100px;">
+        <div class="card reveal" style="text-align: center; padding: 60px 40px; border-color: var(--border-accent); box-shadow: var(--shadow-glow);">
+            <h2 style="font-size: 2rem; font-weight: 900; font-style: italic; text-transform: uppercase; margin-bottom: 12px;">ИЩЕТЕ ЧТО-ТО КОНКРЕТНОЕ?</h2>
+            <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 30px;">Получите доступ к полному каталогу из более чем 50,000 деталей.</p>
+            <a href="#" data-page="catalog" class="btn btn-primary btn-lg">ОТКРЫТЬ ПОЛНЫЙ КАТАЛОГ</a>
         </div>
     </section>
 
@@ -506,6 +549,7 @@
     </div>
 </div>
 
-<script src="/js/app.js"></script>
+<script type="module" src="/js/aurora.js?v=4"></script>
+<script src="/js/app.js?v=4"></script>
 </body>
 </html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KINETIC | High-Performance Automotive Parts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#665100",
+              "tertiary-dim": "#efc52b",
+              "secondary-container": "#875200",
+              "surface-container-lowest": "#000000",
+              "on-error-container": "#ffd2c8",
+              "outline-variant": "#484847",
+              "on-secondary": "#512f00",
+              "on-background": "#ffffff",
+              "secondary": "#ffa52a",
+              "inverse-on-surface": "#565555",
+              "primary-container": "#fd8b00",
+              "on-tertiary-fixed": "#453600",
+              "surface-dim": "#0e0e0e",
+              "on-primary-fixed": "#180800",
+              "on-tertiary-container": "#5c4900",
+              "tertiary-fixed-dim": "#efc52b",
+              "surface": "#0e0e0e",
+              "outline": "#767575",
+              "tertiary-container": "#ffd33a",
+              "surface-container": "#1a1a1a",
+              "primary-fixed": "#fd8b00",
+              "surface-tint": "#ff9f4a",
+              "background": "#0e0e0e",
+              "inverse-primary": "#914d00",
+              "error": "#ff7351",
+              "primary": "#ff9f4a",
+              "surface-variant": "#262626",
+              "on-surface-variant": "#adaaaa",
+              "surface-bright": "#2c2c2c",
+              "on-primary-fixed-variant": "#512800",
+              "on-surface": "#ffffff",
+              "secondary-fixed": "#ffc78a",
+              "secondary-fixed-dim": "#ffb55c",
+              "primary-dim": "#ed8200",
+              "on-primary-container": "#442100",
+              "on-error": "#450900",
+              "error-container": "#b92902",
+              "error-dim": "#d53d18",
+              "surface-container-high": "#20201f",
+              "surface-container-low": "#131313",
+              "inverse-surface": "#fcf9f8",
+              "tertiary-fixed": "#ffd33a",
+              "primary-fixed-dim": "#ea8000",
+              "surface-container-highest": "#262626",
+              "secondary-dim": "#ef981a",
+              "on-secondary-fixed": "#4d2d00",
+              "on-primary": "#532a00",
+              "on-tertiary-fixed-variant": "#675200",
+              "on-secondary-container": "#fff6f0",
+              "on-secondary-fixed-variant": "#744600",
+              "tertiary": "#ffe393"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-nav {
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        .hero-gradient {
+            background: linear-gradient(to right, rgba(14, 14, 14, 0.9) 30%, rgba(14, 14, 14, 0.2) 100%);
+        }
+        .tonal-row:nth-child(even) {
+            background-color: #131313;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-zinc-950/80 backdrop-blur-xl shadow-[0px_40px_40px_-5px_rgba(255,140,0,0.06)]">
+<div class="flex justify-between items-center max-w-[1440px] mx-auto px-10 h-20">
+<div class="flex items-center gap-12">
+<a class="text-2xl font-black italic tracking-tighter text-orange-500 font-['Space_Grotesk']" href="#">KINETIC</a>
+<div class="hidden md:flex items-center gap-8 font-['Space_Grotesk'] tracking-tight text-sm font-medium uppercase">
+<a class="text-orange-500 border-b-2 border-orange-500 pb-1" href="#">Catalog</a>
+<a class="text-zinc-400 hover:text-white transition-colors duration-300" href="#">Services</a>
+<a class="text-zinc-400 hover:text-white transition-colors duration-300" href="#">About</a>
+<a class="text-zinc-400 hover:text-white transition-colors duration-300" href="#">Contact</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="material-symbols-outlined text-zinc-400 hover:text-orange-400 transition-all duration-200 active:scale-95" data-icon="search">search</button>
+<button class="material-symbols-outlined text-zinc-400 hover:text-orange-400 transition-all duration-200 active:scale-95" data-icon="person">person</button>
+<div class="relative">
+<button class="material-symbols-outlined text-zinc-400 hover:text-orange-400 transition-all duration-200 active:scale-95" data-icon="shopping_cart">shopping_cart</button>
+<span class="absolute -top-2 -right-2 bg-orange-500 text-on-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+</div>
+</div>
+</div>
+</nav>
+<main>
+<!-- Section 1: Hero Section -->
+<section class="relative h-screen flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="Performance Engine" class="w-full h-full object-cover" data-alt="close-up of a high-performance turbocharged car engine with polished steel surfaces and glowing orange accent lighting in a dark garage" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBsGTKBG-RQpWGvofId6qhNwFY5mAjr5_kcnQGQGUSX5IWXpTw_F1PKhc_U7gJGJGwEwqbrO1Gs_d2ARlN2xNOBh7-wknGQ5S_hL1Pq7dvAXyQ4Lub8ChGVUvyd32g1ayZZ7v1itzG51fl1u9bQ-KQuywcYJCncWCT2xS5juIBPFHtKJSj2bICY2nqsDl8zvFqLwHhOefqemBphCgfXvw7gy7QWOzd041LwbzRSqDhEV5BhYAbUARjxytt5dyLNkxmEOGYGrVOLMCk"/>
+<div class="absolute inset-0 hero-gradient"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+</div>
+<div class="relative z-10 max-w-[1440px] mx-auto px-10 w-full">
+<div class="max-w-3xl">
+<span class="text-primary font-headline font-bold tracking-[0.2em] uppercase text-sm mb-6 block">Precision Engineering</span>
+<h1 class="text-7xl md:text-8xl font-headline font-black leading-[0.9] tracking-tighter mb-8 italic">
+                        ENGINEERED FOR <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">VELOCITY</span>.
+                    </h1>
+<p class="text-on-surface-variant text-xl max-w-xl mb-12 leading-relaxed">
+                        Performance-grade components designed to push the boundaries of automotive potential. From the track to the street, we deliver the edge you need.
+                    </p>
+<div class="flex flex-wrap gap-6">
+<button class="bg-gradient-to-r from-primary to-primary-dim text-on-primary font-headline font-bold px-10 py-5 rounded-lg flex items-center gap-3 hover:scale-105 transition-transform active:scale-95">
+                            EXPLORE CATALOG
+                            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="border border-outline-variant hover:bg-surface-variant text-on-surface font-headline font-bold px-10 py-5 rounded-lg transition-all active:scale-95">
+                            VIEW TECHNICAL SPECS
+                        </button>
+</div>
+</div>
+</div>
+<!-- Scroll Indicator -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+<span class="text-[10px] tracking-widest uppercase font-bold text-on-surface-variant">Scroll</span>
+<div class="w-px h-12 bg-gradient-to-b from-primary to-transparent"></div>
+</div>
+</section>
+<!-- Section 2: Why Choose Us -->
+<section class="bg-surface-container-low py-24 relative overflow-hidden">
+<div class="absolute top-0 right-0 opacity-[0.03] pointer-events-none">
+<h2 class="text-[20rem] font-black italic -mr-40 leading-none">PRECISION</h2>
+</div>
+<div class="max-w-[1440px] mx-auto px-10 relative z-10">
+<div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+<div class="max-w-xl">
+<h2 class="text-4xl md:text-5xl font-headline font-black italic tracking-tighter mb-4">WHY KINETIC?</h2>
+<p class="text-on-surface-variant">We don't just sell parts. We provide the structural integrity and performance benchmarks that define world-class racing and luxury automotive care.</p>
+</div>
+<div class="flex gap-4">
+<span class="w-12 h-1 bg-primary"></span>
+<span class="w-4 h-1 bg-outline-variant"></span>
+<span class="w-4 h-1 bg-outline-variant"></span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Feature Card 1 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-10 rounded-xl transition-all duration-300 border-b-2 border-transparent hover:border-primary">
+<div class="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="verified">verified</span>
+</div>
+<h3 class="text-xl font-headline font-bold mb-4 italic uppercase">Quality Guaranteed</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Every component undergoes rigorous stress-testing to ensure it exceeds OEM standards and performance expectations.</p>
+</div>
+<!-- Feature Card 2 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-10 rounded-xl transition-all duration-300 border-b-2 border-transparent hover:border-primary">
+<div class="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="bolt">bolt</span>
+</div>
+<h3 class="text-xl font-headline font-bold mb-4 italic uppercase">Fast Delivery</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Our logistics engine is as fast as our parts. Priority shipping across the globe to get you back on the track faster.</p>
+</div>
+<!-- Feature Card 3 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-10 rounded-xl transition-all duration-300 border-b-2 border-transparent hover:border-primary">
+<div class="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="support_agent">support_agent</span>
+</div>
+<h3 class="text-xl font-headline font-bold mb-4 italic uppercase">Expert Support</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Direct access to master technicians and performance engineers who speak the language of torque and horsepower.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Popular Products -->
+<section class="bg-background py-24">
+<div class="max-w-[1440px] mx-auto px-10">
+<div class="flex items-center justify-between mb-16">
+<div>
+<h2 class="text-4xl md:text-5xl font-headline font-black italic tracking-tighter mb-2">POPULAR COMPONENTS</h2>
+<div class="h-1 w-32 bg-primary"></div>
+</div>
+<div class="hidden md:flex gap-4">
+<button class="w-12 h-12 rounded-full border border-outline-variant flex items-center justify-center hover:bg-primary hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-12 h-12 rounded-full border border-outline-variant flex items-center justify-center hover:bg-primary hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Product 1 -->
+<div class="group relative">
+<div class="aspect-square bg-surface-container-highest rounded-xl overflow-hidden mb-6 flex items-center justify-center p-8 group-hover:scale-105 transition-all duration-500">
+<img alt="Carbon Ceramic Brake Disk" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" data-alt="isolated high-contrast photograph of a carbon ceramic brake disk with orange calipers on a dark textured background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQsSksN4JnGeKhK9TMwNXqceHSM6stGJeececsTdy1YpZPB1gkppmx6etn1df1AFcks2AtpHdwDm-aYAOKX7KSN4a-WFnc1UyEAd209-5v1YtyKUVW5QcsnVnGt2IVMPX9XHy80TNpnLuyht39wxh9tJbWcN-mmXB-PxTTKmXd9DbiySuEQJugBb_QJfOx0t1VEV2dRgBTEYIyIP7EptYpHBBJiAnSjzVOhfaLOhYLpMPJXt6Na-e_xE5t29GeK407HNUlY-tdcjja"/>
+<div class="absolute top-4 right-4 bg-tertiary text-on-tertiary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">In Stock</div>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline font-bold text-lg uppercase">Ceramic Brake System</h3>
+<span class="font-headline font-bold text-primary">$1,249.00</span>
+</div>
+<div class="flex items-center gap-1 mb-4">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star_half" style="font-variation-settings: 'FILL' 1;">star_half</span>
+<span class="text-on-surface-variant text-xs ml-2">(42 Reviews)</span>
+</div>
+<button class="w-full bg-surface-container-highest border border-outline-variant text-white font-headline font-bold py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container hover:border-transparent transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="shopping_cart">shopping_cart</span>
+                            ADD TO CART
+                        </button>
+</div>
+<!-- Product 2 -->
+<div class="group relative">
+<div class="aspect-square bg-surface-container-highest rounded-xl overflow-hidden mb-6 flex items-center justify-center p-8 group-hover:scale-105 transition-all duration-500">
+<img alt="Turbocharger" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" data-alt="studio lighting on a high-gloss titanium turbocharger component showing intricate fins and high-tech alloy finish" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-YwUyNoiO302nEYRTJpQT0e8OzHts0lJThRx1jjHsRZxrC8pGAveDgIznMOcSzhkwG-SeMUzEnSDgOdmjlPo6SSFae_n7Z0tjQKcH--xrvrDmUUxa-ZKU_ur2oSvGSX-HVvoP1Vhqos160ORflx_lE1ytyc7-1ypXjPJM5R4FyCVuWeaC_vjwDTqlWRNlGJXitYBhNL_k5eJdfurjoqw4oLjFvTbWTQgAT6Bp-j_hSqWiYEVpuGBqvkNYOho4h2IZEilAtUvTfGBd"/>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline font-bold text-lg uppercase">V-Series Turbocharger</h3>
+<span class="font-headline font-bold text-primary">$895.00</span>
+</div>
+<div class="flex items-center gap-1 mb-4">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-on-surface-variant text-xs ml-2">(128 Reviews)</span>
+</div>
+<button class="w-full bg-surface-container-highest border border-outline-variant text-white font-headline font-bold py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container hover:border-transparent transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="shopping_cart">shopping_cart</span>
+                            ADD TO CART
+                        </button>
+</div>
+<!-- Product 3 -->
+<div class="group relative">
+<div class="aspect-square bg-surface-container-highest rounded-xl overflow-hidden mb-6 flex items-center justify-center p-8 group-hover:scale-105 transition-all duration-500">
+<img alt="Synthetic Oil" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" data-alt="sleek matte black performance oil canister with neon orange labeling on a dark carbon fiber surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVCElDy245ixyIZ5l40HN64XJfGEtxOZ7OkScaGQOSGm3lYuFPkwRWJhE5qZc6-uuAb-gLH_i0vgvdHpFqaZ_Z5T13sPogDY-r6qT92vbm-hz_sFFiel53ysUu-TzZ6lBePdMsVcL6lzDfjBRfSbLzDlMfH4MoZjkW6ESywk0PWWmvkU8MS1tm2Bi9MlccYyqjYhvHupIshpr7yz9ONepR2Emav4_S5wcskiqtxmdv7v8S6o3oAeMzw07E_ByskQV_6EGbRDBe-QOe"/>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline font-bold text-lg uppercase">Nano-Tech Synth Oil</h3>
+<span class="font-headline font-bold text-primary">$85.00</span>
+</div>
+<div class="flex items-center gap-1 mb-4">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-outline text-sm" data-icon="star">star</span>
+<span class="text-on-surface-variant text-xs ml-2">(310 Reviews)</span>
+</div>
+<button class="w-full bg-surface-container-highest border border-outline-variant text-white font-headline font-bold py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container hover:border-transparent transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="shopping_cart">shopping_cart</span>
+                            ADD TO CART
+                        </button>
+</div>
+<!-- Product 4 -->
+<div class="group relative">
+<div class="aspect-square bg-surface-container-highest rounded-xl overflow-hidden mb-6 flex items-center justify-center p-8 group-hover:scale-105 transition-all duration-500">
+<img alt="Spark Plug" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all" data-alt="macro close-up of high-performance iridium spark plugs showing the precision electrode and orange heat sealing ring" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABwhzeO4zDl25E2CpDhPWUjck-FWWTAhxIpapJV3REE86ctV1ug_TVDsqOYPeLX7EHFpvMG_RfmDNOAxQ9CGDxNdle0KNVluV_JaHFKjy60GVtAvqlhUVaBMStEQvqrTvfb7jLt1Cf6MOGb_cNRM6UODKwE_429FFpNzu4ojylXCFsdqqiuqho75ElQ5FU-S5f534WPgZ9IL-FCddj-spbSF6BvQ-RcOSoZpFBb-UM-OwJ7HDXyco6Yb3AaD1u-9GSI6vlENGKG8NU"/>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline font-bold text-lg uppercase">Iridium Spark Plug (x4)</h3>
+<span class="font-headline font-bold text-primary">$120.00</span>
+</div>
+<div class="flex items-center gap-1 mb-4">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-on-surface-variant text-xs ml-2">(89 Reviews)</span>
+</div>
+<button class="w-full bg-surface-container-highest border border-outline-variant text-white font-headline font-bold py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container hover:border-transparent transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="shopping_cart">shopping_cart</span>
+                            ADD TO CART
+                        </button>
+</div>
+</div>
+<div class="mt-20 p-12 bg-surface-container-high rounded-2xl flex flex-col md:flex-row items-center justify-between gap-8 border-l-4 border-primary">
+<div>
+<h3 class="text-2xl font-headline font-bold mb-2">LOOKING FOR SOMETHING SPECIFIC?</h3>
+<p class="text-on-surface-variant">Access our full catalog of over 50,000 performance-tuned parts.</p>
+</div>
+<button class="bg-primary text-on-primary font-headline font-bold px-8 py-4 rounded-lg hover:bg-primary-dim transition-colors whitespace-nowrap">
+                        SEARCH ALL PARTS
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-black w-full py-16">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 max-w-[1440px] mx-auto px-10">
+<div class="col-span-1 md:col-span-1">
+<a class="text-xl font-black italic text-zinc-100 font-['Space_Grotesk'] mb-6 block" href="#">KINETIC</a>
+<p class="text-zinc-500 font-['Inter'] text-xs leading-relaxed mb-6">
+                    Premier engineering and distribution of performance-grade automotive components. Elevating the driving experience through precision and innovation.
+                </p>
+<div class="flex gap-4">
+<span class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer material-symbols-outlined" data-icon="public">public</span>
+<span class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer material-symbols-outlined" data-icon="alternate_email">alternate_email</span>
+<span class="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-orange-500 transition-colors cursor-pointer material-symbols-outlined" data-icon="share">share</span>
+</div>
+</div>
+<div class="col-span-1">
+<h4 class="text-white font-headline font-bold text-sm mb-6 uppercase tracking-wider">Quick Links</h4>
+<ul class="space-y-4">
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Catalog</a></li>
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">New Arrivals</a></li>
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Technical Blog</a></li>
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Brand Partners</a></li>
+</ul>
+</div>
+<div class="col-span-1">
+<h4 class="text-white font-headline font-bold text-sm mb-6 uppercase tracking-wider">Customer Support</h4>
+<ul class="space-y-4">
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Terms of Service</a></li>
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Privacy Policy</a></li>
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Shipping &amp; Returns</a></li>
+<li><a class="text-zinc-500 hover:text-orange-500 transition-colors text-xs font-['Inter']" href="#">Technical Support</a></li>
+</ul>
+</div>
+<div class="col-span-1">
+<h4 class="text-white font-headline font-bold text-sm mb-6 uppercase tracking-wider">Newsletter</h4>
+<p class="text-zinc-500 text-xs mb-4">Get the latest performance updates directly in your inbox.</p>
+<div class="flex">
+<input class="bg-zinc-900 border-none text-xs p-3 rounded-l-lg w-full focus:ring-1 focus:ring-orange-500" placeholder="Email Address" type="email"/>
+<button class="bg-orange-500 text-on-primary px-4 rounded-r-lg hover:bg-orange-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<div class="max-w-[1440px] mx-auto px-10 mt-16 pt-8 border-t border-zinc-900">
+<p class="text-zinc-500 text-[10px] tracking-widest text-center uppercase font-['Inter']">
+                © 2024 KINETIC PRECISION. ENGINEERED FOR VELOCITY.
+            </p>
+</div>
+</footer>
+</body></html>

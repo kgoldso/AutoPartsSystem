@@ -1,4 +1,3 @@
-using AutoPartsSystem.Data;
 using AutoPartsSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,21 +5,17 @@ namespace WebApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(IdentityService identityService) : ControllerBase
 {
-    private readonly IRepository _repo;
-
-    public AuthController(IRepository repo)
-    {
-        _repo = repo;
-    }
-
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = _repo.GetUserByLogin(request.Login);
-        if (user == null || user.PasswordHash != request.Password)
-            return Unauthorized(new { message = "Неверный логин или пароль" });
+        var result = await identityService.LoginAsync(request.Login, request.Password);
+        
+        if (!result.IsSuccess)
+            return Unauthorized(new { message = result.Error });
+
+        var user = result.Value!;
 
         // Store user info in session
         HttpContext.Session.SetInt32("UserId", user.Id);
@@ -33,6 +28,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
+        identityService.Logout();
         HttpContext.Session.Clear();
         return Ok(new { message = "Выход выполнен" });
     }

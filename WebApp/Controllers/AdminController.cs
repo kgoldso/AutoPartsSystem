@@ -7,41 +7,33 @@ namespace WebApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AdminController : ControllerBase
+public class AdminController(IRepository repo, IdentityService identity, AdminService adminService) : ControllerBase
 {
-    private readonly IRepository _repo;
-    private readonly IdentityService _identity;
-    private readonly AdminService _adminService;
-
-    public AdminController(IRepository repo, IdentityService identity, AdminService adminService)
-    {
-        _repo = repo;
-        _identity = identity;
-        _adminService = adminService;
-    }
-
-    private bool EnsureAdmin()
+    private async Task<Result> EnsureAdminAsync()
     {
         var role = HttpContext.Session.GetString("UserRole");
-        if (role == "Admin")
-        {
-            var login = HttpContext.Session.GetString("UserLogin")!;
-            var user = _repo.GetUserByLogin(login);
-            if (user != null) _identity.Login(login, user.PasswordHash);
-            return true;
-        }
-        return false;
+        if (role != "Admin") return Result.Failure("Forbidden");
+
+        var login = HttpContext.Session.GetString("UserLogin");
+        if (login == null) return Result.Failure("Unauthorized");
+
+        var user = await repo.GetUserByLoginAsync(login);
+        if (user == null) return Result.Failure("Unauthorized");
+
+        await identity.LoginAsync(login, user.PasswordHash);
+        return Result.Success();
     }
 
     [HttpGet("stats")]
-    public IActionResult GetStats()
+    public async Task<IActionResult> GetStats()
     {
-        if (!EnsureAdmin()) return Forbid();
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        var orders = _repo.GetAllOrders();
-        var parts = _repo.GetAllParts();
-        var customers = _repo.GetAllCustomers();
-        var users = _repo.GetAllUsers();
+        var orders = await repo.GetAllOrdersAsync();
+        var parts = await repo.GetAllPartsAsync();
+        var customers = await repo.GetAllCustomersAsync();
+        var users = await repo.GetAllUsersAsync();
 
         var totalRevenue = orders.Where(o => o.Status == "Отгружен").Sum(o => o.TotalPrice);
         var totalOrders = orders.Count;
@@ -62,100 +54,102 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("reports/sales")]
-    public IActionResult SalesReport()
+    public async Task<IActionResult> SalesReport()
     {
-        if (!EnsureAdmin()) return Forbid();
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        try
-        {
-            var total = _adminService.GenerateSalesReport();
-            var orders = _repo.GetAllOrders()
-                .Where(o => o.Status == "Отгружен")
-                .OrderByDescending(o => o.OrderDate)
-                .Select(o =>
-                {
-                    var part = _repo.GetPartById(o.PartId);
-                    return new { o.Id, o.TotalPrice, o.OrderDate, PartName = part?.Name ?? "—" };
-                }).ToList();
+        var result = await adminService.GenerateSalesReportAsync();
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
 
-            return Ok(new { totalRevenue = total, orders });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var allOrders = await repo.GetAllOrdersAsync();
+        var allParts = await repo.GetAllPartsAsync();
+
+        var orders = allOrders
+            .Where(o => o.Status == "Отгружен")
+            .OrderByDescending(o => o.OrderDate)
+            .Select(o =>
+            {
+                var part = allParts.FirstOrDefault(p => p.Id == o.PartId);
+                return new { o.Id, o.TotalPrice, o.OrderDate, PartName = part?.Name ?? "—" };
+            }).ToList();
+
+        return Ok(new { totalRevenue = result.Value, orders });
     }
 
     [HttpGet("reports/stock")]
-    public IActionResult StockReport()
+    public async Task<IActionResult> StockReport()
     {
-        if (!EnsureAdmin()) return Forbid();
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        try
-        {
-            var lowStock = _adminService.GenerateStockReport(10);
-            return Ok(lowStock);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await adminService.GenerateStockReportAsync(10);
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        return Ok(result.Value);
     }
 
     [HttpGet("users")]
-    public IActionResult GetUsers()
+    public async Task<IActionResult> GetUsers()
     {
-        if (!EnsureAdmin()) return Forbid();
-        var users = _repo.GetAllUsers().Select(u => new { u.Id, u.Login, u.Role }).ToList();
-        return Ok(users);
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
+
+        var users = await repo.GetAllUsersAsync();
+        var projection = users.Select(u => new { u.Id, u.Login, u.Role }).ToList();
+        return Ok(projection);
     }
 
     [HttpPost("users")]
-    public IActionResult CreateUser([FromBody] CreateUserRequest request)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
     {
-        if (!EnsureAdmin()) return Forbid();
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        try
-        {
-            var user = _adminService.RegisterEmployee(request.Login, request.Password, request.Role);
-            return Ok(new { message = "Пользователь создан", id = user.Id });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await adminService.RegisterEmployeeAsync(request.Login, request.Password, request.Role);
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        return Ok(new { message = "Пользователь создан", id = result.Value!.Id });
     }
 
     [HttpDelete("users/{id}")]
-    public IActionResult DeleteUser(int id)
+    public async Task<IActionResult> DeleteUser(int id)
     {
-        if (!EnsureAdmin()) return Forbid();
-        _repo.DeleteUser(id);
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
+
+        await repo.DeleteUserAsync(id);
         return Ok(new { message = "Пользователь удалён" });
     }
 
     [HttpPost("parts")]
-    public IActionResult AddPart([FromBody] Part part)
+    public async Task<IActionResult> AddPart([FromBody] Part part)
     {
-        if (!EnsureAdmin()) return Forbid();
-        _repo.AddPart(part);
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
+
+        await repo.AddPartAsync(part);
         return Ok(new { message = "Запчасть добавлена", id = part.Id });
     }
 
     [HttpPut("parts/{id}")]
-    public IActionResult UpdatePart(int id, [FromBody] Part part)
+    public async Task<IActionResult> UpdatePart(int id, [FromBody] Part part)
     {
-        if (!EnsureAdmin()) return Forbid();
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
+
         part.Id = id;
-        _repo.UpdatePart(part);
+        await repo.UpdatePartAsync(part);
         return Ok(new { message = "Запчасть обновлена" });
     }
 
     [HttpDelete("parts/{id}")]
-    public IActionResult DeletePart(int id)
+    public async Task<IActionResult> DeletePart(int id)
     {
-        if (!EnsureAdmin()) return Forbid();
-        _repo.DeletePart(id);
+        var auth = await EnsureAdminAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
+
+        await repo.DeletePartAsync(id);
         return Ok(new { message = "Запчасть удалена" });
     }
 }

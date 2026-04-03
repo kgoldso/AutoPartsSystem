@@ -1,18 +1,18 @@
-﻿using AutoPartsSystem.Data;
-using AutoPartsSystem.Services; // Не забудьте добавить этот using
+using AutoPartsSystem.Data;
+using AutoPartsSystem.Models;
+using AutoPartsSystem.Services;
 
 const string ConnectionString = "Data Source=autoparts.db";
 
-// 1. Инициализация базы данных (остается прежней)
+// 1. Инициализация базы данных
 DbInitializer.Initialize(ConnectionString);
 
-// 2. Инициализация слоя данных (репозиторий)
+// 2. Инициализация слоя данных
 var repo = new SqliteRepository(ConnectionString);
 
-// 3. Инициализация сервисного слоя (новое)
-// Передаем репозиторий в конструкторы сервисов
+// 3. Инициализация сервисного слоя
 var identityService = new IdentityService(repo);
-var orderService = new OrderService(repo); // Клиентский сервис пока можно оставить без жесткой защиты (либо передать туда identityService и проверять роль 'Client'/'Manager')
+var orderService = new OrderService(repo);
 var warehouseService = new WarehouseService(repo, identityService);
 var adminService = new AdminService(repo, identityService);
 
@@ -21,42 +21,51 @@ Console.WriteLine("║              AutoParts Order System — Этап 2       
 Console.WriteLine("╚══════════════════════════════════════════════════════════════════╝");
 
 // --- ПРИМЕР ИСПОЛЬЗОВАНИЯ ORDER SERVICE ---
-try 
-{
-    Console.WriteLine("\n[Тест] Оформление заказа через OrderService:");
-    
-    // Вызываем бизнес-логику оформления заказа
-    // Данные: Email, Имя, Телефон, ID детали (например, 1), Кол-во, Срочность
-    var myOrder = orderService.PlaceOrder(
-        "customer@email.com", 
-        "Алексей Петров", 
-        "+375291234567", 
-        1, 
-        2, 
-        isUrgent: true
-    );
+Console.WriteLine("\n[Тест] Оформление заказа через OrderService:");
 
+// Вызываем бизнес-логику оформления заказа асинхронно
+var orderResult = await orderService.PlaceOrderAsync(
+    "customer@email.com", 
+    "Алексей Петров", 
+    "+375291234567", 
+    1, 
+    2, 
+    isUrgent: true
+);
+
+if (orderResult.IsSuccess)
+{
+    var myOrder = orderResult.Value!;
     Console.WriteLine($"✅ Заказ №{myOrder.Id} успешно оформлен!");
     Console.WriteLine($"   Итоговая цена (с учетом срочности): {myOrder.TotalPrice:F2}");
     Console.WriteLine($"   Ожидаемая дата доставки: {myOrder.EstimatedDeliveryDate:dd.MM.yyyy}");
 }
-catch (Exception ex)
+else
 {
-    // Сервис сам выбросит исключение, если товара нет на складе
-    Console.WriteLine($"❌ Ошибка оформления: {ex.Message}");
+    Console.WriteLine($"❌ Ошибка оформления: {orderResult.Error}");
 }
 
 // --- ПРИМЕР ИСПОЛЬЗОВАНИЯ ADMIN SERVICE ---
-Console.WriteLine("\n[Тест] Отчет по остаткам (критический порог < 10):");
-var lowStockParts = adminService.GenerateStockReport(10);
+// Имитируем логин админа для доступа к отчету
+await identityService.LoginAsync("admin", "admin123"); 
 
-foreach (var p in lowStockParts)
+Console.WriteLine("\n[Тест] Отчет по остаткам (критический порог < 10):");
+var stockReportResult = await adminService.GenerateStockReportAsync(10);
+
+if (stockReportResult.IsSuccess)
 {
-    Console.WriteLine($"⚠️ Мало на складе: {p.Name} (Осталось: {p.Stock})");
+    foreach (var p in stockReportResult.Value!)
+    {
+        Console.WriteLine($"⚠️ Мало на складе: {p.Name} (Осталось: {p.Stock})");
+    }
+}
+else
+{
+    Console.WriteLine($"❌ Ошибка получения отчета: {stockReportResult.Error}");
 }
 
-// --- ПРИМЕР ВЫВОДА КАТАЛОГА (ваш старый код) ---
-var parts = repo.GetAllParts();
+// --- ПРИМЕР ВЫВОДА КАТАЛОГА ---
+var parts = await repo.GetAllPartsAsync();
 Console.WriteLine("\nТекущее состояние склада:");
 Console.WriteLine($"{"ID",-4} {"Артикул",-10} {"Наименование",-32} {"Цена",8} {"Склад",6}");
 Console.WriteLine(new string('─', 70));

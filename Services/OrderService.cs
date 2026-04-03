@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using AutoPartsSystem.Data;
 using AutoPartsSystem.Models;
 
@@ -8,48 +5,43 @@ namespace AutoPartsSystem.Services;
 
 /// <summary>
 /// Сервис для управления заказами и расчетами стоимости/сроков.
+/// Использует Result Pattern и асинхронность (C# 12).
 /// </summary>
-public class OrderService
+public class OrderService(IRepository repository)
 {
-    private readonly IRepository _repository;
-
-    public OrderService(IRepository repository)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
-
     /// <summary>
     /// Оформляет новый заказ, применяя бизнес-правила срочности и обновляя склад.
     /// </summary>
-    /// <param name="email">Email клиента.</param>
-    /// <param name="fullName">ФИО клиента (используется, если клиент новый).</param>
-    /// <param name="phone">Телефон клиента (используется, если клиент новый).</param>
-    /// <param name="partId">ID запчасти.</param>
-    /// <param name="quantity">Количество.</param>
-    /// <param name="isUrgent">Флаг срочности заказа.</param>
-    /// <returns>Оформленный заказ.</returns>
-    /// <exception cref="InvalidOperationException">Выбрасывается, если товара недостаточно на складе.</exception>
-    /// <exception cref="ArgumentException">Выбрасывается, если деталь не найдена.</exception>
-    public Order PlaceOrder(string email, string fullName, string phone, int partId, int quantity, bool isUrgent) // TODO: Проверяет наличие товара на складе
-    // Автоматический ReserveParts, Бизнес-правила, Работа с клиентом
+    public async Task<Result<Order>> PlaceOrderAsync(int userId, string email, string fullName, string phone, int partId, int quantity, bool isUrgent)
     {
         if (quantity <= 0)
-            throw new ArgumentException("Количество должно быть больше нуля.", nameof(quantity));
+            return Result<Order>.Failure("Количество должно быть больше нуля.");
 
         // 1. Поиск или создание клиента
-        var customer = _repository.FindCustomerByEmail(email);
+        var customer = await repository.FindCustomerByEmailAsync(email);
         if (customer == null)
         {
             customer = new Customer { Email = email, FullName = fullName, Phone = phone };
-            _repository.AddCustomer(customer);
+            await repository.AddCustomerAsync(customer);
+        }
+        else
+        {
+            // Если данные изменились, обновляем профиль клиента (кроме Email)
+            if (customer.FullName != fullName || customer.Phone != phone)
+            {
+                customer.FullName = fullName;
+                customer.Phone = phone;
+                await repository.UpdateCustomerAsync(customer);
+            }
         }
 
         // 2. Поиск детали и проверка остатков
-        var part = _repository.GetPartById(partId) 
-            ?? throw new ArgumentException($"Деталь с ID {partId} не найдена.");
+        var part = await repository.GetPartByIdAsync(partId);
+        if (part == null)
+            return Result<Order>.Failure($"Деталь с ID {partId} не найдена.");
 
         if (part.Stock < quantity)
-            throw new InvalidOperationException($"Недостаточно товара на складе. В наличии: {part.Stock}, запрошено: {quantity}.");
+            return Result<Order>.Failure($"Недостаточно товара на складе. В наличии: {part.Stock}, запрошено: {quantity}.");
 
         // 3. Применение бизнес-правил
         decimal basePrice = part.Price * quantity;
@@ -64,32 +56,63 @@ public class OrderService
         // 4. Формирование заказа
         var order = new Order
         {
+            UserId = userId,
             CustomerId = customer.Id,
+            CustomerFullName = fullName,
+            CustomerEmail = email,
+            CustomerPhone = phone,
             PartId = part.Id,
             Quantity = quantity,
             TotalPrice = totalPrice,
             Urgent = isUrgent,
             Status = "Новый",
-            DeliveryMethod = "Доставка", // Можно вынести в параметры метода
+            DeliveryMethod = "Доставка",
             OrderDate = DateTime.Now,
             EstimatedDeliveryDate = DateTime.Now.AddDays(leadTime)
         };
 
         // 5. Сохранение изменений
-        // Списываем товар со склада
-        _repository.UpdatePartStock(part.Id, part.Stock - quantity);
-        // Сохраняем заказ
-        _repository.AddOrder(order);
+        await repository.UpdatePartStockAsync(part.Id, part.Stock - quantity);
+        await repository.AddOrderAsync(order);
 
-        return order;
+        return Result<Order>.Success(order);
+    }
+
+    /// <summary>
+    /// Отменяет заказ и возвращает товар на склад.
+    /// </summary>
+    public async Task<Result<bool>> CancelOrderAsync(int orderId)
+    {
+        var order = await repository.GetOrderByIdAsync(orderId);
+        if (order == null)
+            return Result<bool>.Failure("Заказ не найден.");
+
+        if (order.Status is "Отменен" or "Отменён")
+            return Result<bool>.Failure("Заказ уже отменен.");
+
+        if (order.Status == "Отгружен")
+            return Result<bool>.Failure("Нельзя отменить отгруженный заказ.");
+
+        // 1. Возвращаем товар на склад
+        var part = await repository.GetPartByIdAsync(order.PartId);
+        if (part != null)
+        {
+            await repository.UpdatePartStockAsync(part.Id, part.Stock + order.Quantity);
+        }
+
+        // 2. Обновляем статус заказа
+        await repository.UpdateOrderStatusAsync(orderId, "Отменен");
+
+        return Result<bool>.Success(true);
     }
 
     /// <summary>
     /// Возвращает историю заказов для указанного клиента.
     /// </summary>
-    public List<Order> GetOrderHistory(int customerId) // TODO: Метод фильтрует все заказы из репозитория по CustomerId и сортирует их по дате.
+    public async Task<List<Order>> GetOrderHistoryAsync(int customerId)
     {
-        return _repository.GetAllOrders()
+        var allOrders = await repository.GetAllOrdersAsync();
+        return allOrders
             .Where(o => o.CustomerId == customerId)
             .OrderByDescending(o => o.OrderDate)
             .ToList();

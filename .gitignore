@@ -427,3 +427,7 @@ FodyWeavers.xsd
 *.msm
 *.msp
 *.db
+.DS_Store
+.gemini/
+bin/
+obj/

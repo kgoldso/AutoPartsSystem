@@ -53,7 +53,11 @@ public static class DbInitializer
 
             CREATE TABLE IF NOT EXISTS Orders (
                 Id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                UserId                INTEGER NOT NULL REFERENCES Users(Id),
                 CustomerId            INTEGER NOT NULL REFERENCES Customers(Id),
+                CustomerFullName      TEXT    NOT NULL,
+                CustomerEmail         TEXT    NOT NULL,
+                CustomerPhone         TEXT    NOT NULL,
                 PartId                INTEGER NOT NULL REFERENCES Parts(Id),
                 Quantity              INTEGER NOT NULL,
                 TotalPrice            REAL    NOT NULL,
@@ -77,15 +81,15 @@ public static class DbInitializer
             new Part { Article = "ENG-001", Name = "Масляный фильтр",            CarBrand = "Toyota",     CarModel = "Camry",    GroupName = "Двигатель",  Manufacturer = "Bosch",      Price = 12.50m,   Stock = 100, LeadTimeDays = 3  },
             new Part { Article = "SUS-002", Name = "Амортизатор передний",       CarBrand = "BMW",        CarModel = "E46",      GroupName = "Подвеска",   Manufacturer = "Sachs",      Price = 89.00m,   Stock = 25,  LeadTimeDays = 7  },
             new Part { Article = "BRK-003", Name = "Тормозные колодки передние", CarBrand = "Volkswagen", CarModel = "Golf",     GroupName = "Тормоза",    Manufacturer = "Brembo",     Price = 45.00m,   Stock = 60,  LeadTimeDays = 5  },
-            new Part { Article = "ELC-004", Name = "Аккумулятор 60Ah",           CarBrand = "Ford",       CarModel = "Focus",    GroupName = "Электрика",  Manufacturer = "Varta",      Price = 120.00m,  Stock = 15,  LeadTimeDays = 2  },
+            new Part { Article = "ELC-004", Name = "Аккумулятор 105Ah",           CarBrand = "Ford",       CarModel = "Focus",    GroupName = "Электрика",  Manufacturer = "Varta",      Price = 120.00m,  Stock = 15,  LeadTimeDays = 2  },
             new Part { Article = "BDY-005", Name = "Крыло переднее левое",       CarBrand = "Audi",       CarModel = "A4",       GroupName = "Кузов",      Manufacturer = "Original",   Price = 230.00m,  Stock = 8,   LeadTimeDays = 14 },
-            new Part { Article = "ENG-006", Name = "Свеча зажигания иридиевая",  CarBrand = "Honda",      CarModel = "Civic",    GroupName = "Двигатель",  Manufacturer = "NGK",        Price = 18.50m,   Stock = 200, LeadTimeDays = 2  },
-            new Part { Article = "SUS-007", Name = "Рычаг подвески нижний",      CarBrand = "Mercedes",   CarModel = "W204",     GroupName = "Подвеска",   Manufacturer = "Lemförder",  Price = 155.00m,  Stock = 12,  LeadTimeDays = 10 },
-            new Part { Article = "BRK-008", Name = "Тормозной диск вентилируемый",CarBrand = "Toyota",    CarModel = "RAV4",     GroupName = "Тормоза",    Manufacturer = "TRW",        Price = 68.00m,   Stock = 40,  LeadTimeDays = 5  },
+            new Part { Article = "ENG-006", Name = "Свеча зажигания IK20",       CarBrand = "Honda",      CarModel = "Civic",    GroupName = "Двигатель",  Manufacturer = "Denso",      Price = 18.50m,   Stock = 200, LeadTimeDays = 2  },
+            new Part { Article = "BDY-007", Name = "Капот двигателя",            CarBrand = "Mercedes",   CarModel = "W204",     GroupName = "Кузов",      Manufacturer = "Original",   Price = 350.00m,  Stock = 5,   LeadTimeDays = 10 },
+            new Part { Article = "ELC-008", Name = "Стартер двигателя",          CarBrand = "Toyota",     CarModel = "RAV4",     GroupName = "Электрика",  Manufacturer = "Bosch",      Price = 180.00m,  Stock = 12,  LeadTimeDays = 5  },
             new Part { Article = "ELC-009", Name = "Генератор 14V 120A",         CarBrand = "BMW",        CarModel = "E90",      GroupName = "Электрика",  Manufacturer = "Valeo",      Price = 340.00m,  Stock = 5,   LeadTimeDays = 12 },
-            new Part { Article = "BDY-010", Name = "Фара головного света LED",   CarBrand = "Volkswagen", CarModel = "Passat",   GroupName = "Кузов",      Manufacturer = "Hella",      Price = 450.00m,  Stock = 7,   LeadTimeDays = 14 },
-            new Part { Article = "ENG-011", Name = "Ремень ГРМ комплект",        CarBrand = "Audi",       CarModel = "A3",       GroupName = "Двигатель",  Manufacturer = "Gates",      Price = 95.00m,   Stock = 30,  LeadTimeDays = 4  },
-            new Part { Article = "SUS-008", Name = "Пружина подвески задняя",    CarBrand = "Ford",       CarModel = "Mondeo",   GroupName = "Подвеска",   Manufacturer = "Kayaba",     Price = 72.00m,   Stock = 18,  LeadTimeDays = 6  },
+            new Part { Article = "ENG-010", Name = "Радиатор охлаждения",        CarBrand = "Volkswagen", CarModel = "Passat",   GroupName = "Двигатель",  Manufacturer = "Nissens",    Price = 150.00m,  Stock = 7,   LeadTimeDays = 14 },
+            new Part { Article = "BDY-011", Name = "Фара головного света LED",   CarBrand = "Audi",       CarModel = "A3",       GroupName = "Кузов",      Manufacturer = "Hella",      Price = 450.00m,  Stock = 30,  LeadTimeDays = 4  },
+            new Part { Article = "BRK-012", Name = "Тормозной диск вентилируемый",CarBrand = "Ford",       CarModel = "Mondeo",   GroupName = "Тормоза",    Manufacturer = "TRW",        Price = 72.00m,   Stock = 18,  LeadTimeDays = 6  },
         };
 
         foreach (var part in parts)
@@ -138,17 +142,18 @@ public static class DbInitializer
             ('Сергей Козлов', '+375331112233', 'sergei.k@gmail.com');";
         cmd.ExecuteNonQuery();
 
-        // Seed demo orders
+        // Seed demo orders with snapshot customer data and stable UserId
+        // For demo: client account has ID 4
         var orderCmd = conn.CreateCommand();
         orderCmd.CommandText = @"
-            INSERT INTO Orders (CustomerId, PartId, Quantity, TotalPrice, Urgent, Status, DeliveryMethod, OrderDate, EstimatedDeliveryDate) VALUES 
-            (1, 1, 4, 50.00, 0, 'Отгружен', 'Доставка', '2026-03-20T10:00:00', '2026-03-23T10:00:00'),
-            (1, 3, 2, 90.00, 0, 'Новый', 'Самовывоз', '2026-03-24T14:30:00', '2026-03-29T14:30:00'),
-            (2, 4, 1, 144.00, 1, 'В обработке', 'Доставка', '2026-03-22T09:00:00', '2026-03-23T09:00:00'),
-            (2, 2, 2, 178.00, 0, 'Отгружен', 'Доставка', '2026-03-18T11:00:00', '2026-03-25T11:00:00'),
-            (3, 5, 1, 276.00, 1, 'Новый', 'Доставка', '2026-03-25T08:00:00', '2026-04-06T08:00:00'),
-            (1, 6, 8, 148.00, 0, 'Отгружен', 'Самовывоз', '2026-03-15T16:00:00', '2026-03-17T16:00:00'),
-            (3, 8, 2, 136.00, 0, 'В обработке', 'Доставка', '2026-03-23T12:00:00', '2026-03-28T12:00:00');";
+            INSERT INTO Orders (UserId, CustomerId, CustomerFullName, CustomerEmail, CustomerPhone, PartId, Quantity, TotalPrice, Urgent, Status, DeliveryMethod, OrderDate, EstimatedDeliveryDate) VALUES 
+            (4, 1, 'Алексей Петров', 'client@autoparts.by', '+375291234567', 1, 4, 50.00, 0, 'Отгружен', 'Доставка', '2026-03-20T10:00:00', '2026-03-23T10:00:00'),
+            (4, 1, 'Алексей Петров', 'client@autoparts.by', '+375291234567', 3, 2, 90.00, 0, 'Новый', 'Самовывоз', '2026-03-24T14:30:00', '2026-03-29T14:30:00'),
+            (4, 2, 'Мария Иванова', 'maria@mail.ru', '+375297654321', 4, 1, 144.00, 1, 'В обработке', 'Доставка', '2026-03-22T09:00:00', '2026-03-23T09:00:00'),
+            (4, 2, 'Мария Иванова', 'maria@mail.ru', '+375297654321', 2, 2, 178.00, 0, 'Отгружен', 'Доставка', '2026-03-18T11:00:00', '2026-03-25T11:00:00'),
+            (4, 3, 'Сергей Козлов', 'sergei.k@gmail.com', '+375331112233', 5, 1, 276.00, 1, 'Новый', 'Доставка', '2026-03-25T08:00:00', '2026-04-06T08:00:00'),
+            (4, 1, 'Алексей Петров', 'client@autoparts.by', '+375291234567', 6, 8, 148.00, 0, 'Отгружен', 'Самовывоз', '2026-03-15T16:00:00', '2026-03-17T16:00:00'),
+            (4, 3, 'Сергей Козлов', 'sergei.k@gmail.com', '+375331112233', 8, 2, 136.00, 0, 'В обработке', 'Доставка', '2026-03-23T12:00:00', '2026-03-28T12:00:00');";
         orderCmd.ExecuteNonQuery();
     }
 }

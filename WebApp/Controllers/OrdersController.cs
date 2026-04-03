@@ -1,4 +1,5 @@
 using AutoPartsSystem.Data;
+using AutoPartsSystem.Models;
 using AutoPartsSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,38 +7,39 @@ namespace WebApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class OrdersController : ControllerBase
+public class OrdersController(IRepository repo, OrderService orderService) : ControllerBase
 {
-    private readonly IRepository _repo;
-    private readonly OrderService _orderService;
-
-    public OrdersController(IRepository repo, OrderService orderService)
-    {
-        _repo = repo;
-        _orderService = orderService;
-    }
-
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll()
     {
         var role = HttpContext.Session.GetString("UserRole");
         if (role == null) return Unauthorized();
 
-        var orders = _repo.GetAllOrders();
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId == null) return Unauthorized();
 
-        // Enrich with part names and customer info
+        var orders = await repo.GetAllOrdersAsync();
+        
+        // Filter by UserId if Client - this ensures orders are always visible to the account owner
+        if (role == "Client")
+        {
+            orders = orders.Where(o => o.UserId == userId.Value).ToList();
+        }
+
+        var parts = await repo.GetAllPartsAsync();
+
+        // Enrich with part names and customer info from order snapshot
         var enriched = orders.Select(o =>
         {
-            var part = _repo.GetPartById(o.PartId);
-            var customer = _repo.GetAllCustomers().FirstOrDefault(c => c.Id == o.CustomerId);
+            var part = parts.FirstOrDefault(p => p.Id == o.PartId);
             return new
             {
                 o.Id, o.CustomerId, o.PartId, o.Quantity, o.TotalPrice, o.Urgent,
                 o.Status, o.DeliveryMethod, o.OrderDate, o.EstimatedDeliveryDate,
                 PartName = part?.Name ?? "—",
                 PartArticle = part?.Article ?? "—",
-                CustomerName = customer?.FullName ?? "—",
-                CustomerEmail = customer?.Email ?? "—"
+                CustomerName = o.CustomerFullName,
+                CustomerEmail = o.CustomerEmail
             };
         }).OrderByDescending(o => o.OrderDate).ToList();
 
@@ -45,36 +47,48 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult PlaceOrder([FromBody] PlaceOrderRequest request)
+    public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request)
     {
         var role = HttpContext.Session.GetString("UserRole");
         if (role == null) return Unauthorized();
 
-        try
-        {
-            var order = _orderService.PlaceOrder(
-                request.Email, request.FullName, request.Phone,
-                request.PartId, request.Quantity, request.IsUrgent);
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId == null) return Unauthorized();
 
-            return Ok(new { message = "Заказ оформлен", orderId = order.Id, totalPrice = order.TotalPrice });
-        }
-        catch (Exception ex)
+        var result = await orderService.PlaceOrderAsync(
+            userId.Value,
+            request.Email, request.FullName, request.Phone,
+            request.PartId, request.Quantity, request.IsUrgent);
+
+        if (!result.IsSuccess)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = result.Error });
         }
+
+        var order = result.Value!;
+        return Ok(new { message = "Заказ оформлен", orderId = order.Id, totalPrice = order.TotalPrice });
     }
 
     [HttpPut("{id}/status")]
-    public IActionResult UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
     {
         var role = HttpContext.Session.GetString("UserRole");
         if (role != "Manager" && role != "Admin")
             return Forbid();
 
-        var order = _repo.GetOrderById(id);
+        if (request.Status is "Отменен" or "Отменён")
+        {
+            var cancelResult = await orderService.CancelOrderAsync(id);
+            if (!cancelResult.IsSuccess)
+                return BadRequest(new { message = cancelResult.Error });
+            
+            return Ok(new { message = "Заказ отменён, товар возвращён на склад" });
+        }
+
+        var order = await repo.GetOrderByIdAsync(id);
         if (order == null) return NotFound();
 
-        _repo.UpdateOrderStatus(id, request.Status);
+        await repo.UpdateOrderStatusAsync(id, request.Status);
         return Ok(new { message = "Статус обновлён" });
     }
 }

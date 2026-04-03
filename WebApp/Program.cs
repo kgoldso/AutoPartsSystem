@@ -17,14 +17,12 @@ builder.Services.AddSession(options =>
 var dbPath = Path.Combine(builder.Environment.ContentRootPath, "autoparts.db");
 var connectionString = $"Data Source={dbPath}";
 
-// Register DI services
+// Register DI services using modern syntax
 builder.Services.AddSingleton<IRepository>(new SqliteRepository(connectionString));
-builder.Services.AddScoped<IdentityService>(sp => new IdentityService(sp.GetRequiredService<IRepository>()));
-builder.Services.AddScoped<OrderService>(sp => new OrderService(sp.GetRequiredService<IRepository>()));
-builder.Services.AddScoped<WarehouseService>(sp =>
-    new WarehouseService(sp.GetRequiredService<IRepository>(), sp.GetRequiredService<IdentityService>()));
-builder.Services.AddScoped<AdminService>(sp =>
-    new AdminService(sp.GetRequiredService<IRepository>(), sp.GetRequiredService<IdentityService>()));
+builder.Services.AddScoped<IdentityService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<WarehouseService>();
+builder.Services.AddScoped<AdminService>();
 
 builder.Services.AddCors(options =>
 {

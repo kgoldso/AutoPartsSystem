@@ -1,39 +1,31 @@
 using AutoPartsSystem.Data;
-using AutoPartsSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CatalogController : ControllerBase
+public class CatalogController(IRepository repo) : ControllerBase
 {
-    private readonly IRepository _repo;
-
-    public CatalogController(IRepository repo)
-    {
-        _repo = repo;
-    }
-
     [HttpGet]
-    public IActionResult GetAll([FromQuery] string? q, [FromQuery] string? group)
+    public async Task<IActionResult> GetAll([FromQuery] string? q, [FromQuery] string? group)
     {
-        var parts = _repo.SearchParts(q, group);
+        var parts = await repo.SearchPartsAsync(q, group);
         return Ok(parts);
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(int id)
+    public async Task<IActionResult> GetById(int id)
     {
-        var part = _repo.GetPartById(id);
+        var part = await repo.GetPartByIdAsync(id);
         if (part == null) return NotFound();
         return Ok(part);
     }
 
     [HttpGet("groups")]
-    public IActionResult GetGroups()
+    public async Task<IActionResult> GetGroups()
     {
-        var parts = _repo.GetAllParts();
+        var parts = await repo.GetAllPartsAsync();
         var groups = parts.Select(p => p.GroupName).Distinct().OrderBy(g => g).ToList();
         return Ok(groups);
     }

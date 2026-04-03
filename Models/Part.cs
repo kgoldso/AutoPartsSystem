@@ -1,4 +1,3 @@
-// Models/Part.cs
 namespace AutoPartsSystem.Models;
 
 /// <summary>
@@ -9,21 +8,21 @@ public class Part
     public int Id { get; set; }
 
     /// <summary>Уникальный артикул запчасти.</summary>
-    public string Article { get; set; } = string.Empty;
+    public required string Article { get; set; }
 
-    public string Name { get; set; } = string.Empty;
-    public string CarBrand { get; set; } = string.Empty;
-    public string CarModel { get; set; } = string.Empty;
+    public required string Name { get; set; }
+    public required string CarBrand { get; set; }
+    public required string CarModel { get; set; }
 
     /// <summary>Группа: Двигатель, Подвеска, Кузов, Электрика, Тормоза.</summary>
-    public string GroupName { get; set; } = string.Empty;
+    public required string GroupName { get; set; }
 
-    public string Manufacturer { get; set; } = string.Empty;
+    public required string Manufacturer { get; set; }
     public decimal Price { get; set; }
 
-    /// <summary>Текущий остаток на складе. Уменьшается при заказе, восстанавливается при отмене.</summary>
+    /// <summary>Текущий остаток на складе.</summary>
     public int Stock { get; set; }
 
-    /// <summary>Стандартный срок поставки в днях. При срочном заказе уменьшается на 2, минимум 1.</summary>
+    /// <summary>Стандартный срок поставки в днях.</summary>
     public int LeadTimeDays { get; set; }
 }

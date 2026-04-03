@@ -1,4 +1,5 @@
 using AutoPartsSystem.Data;
+using AutoPartsSystem.Models;
 using AutoPartsSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,93 +7,75 @@ namespace WebApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class WarehouseController : ControllerBase
+public class WarehouseController(IRepository repo, IdentityService identity, WarehouseService warehouseService) : ControllerBase
 {
-    private readonly IRepository _repo;
-    private readonly IdentityService _identity;
-    private readonly WarehouseService _warehouseService;
-
-    public WarehouseController(IRepository repo, IdentityService identity, WarehouseService warehouseService)
-    {
-        _repo = repo;
-        _identity = identity;
-        _warehouseService = warehouseService;
-    }
-
-    private bool EnsureWarehouse()
+    private async Task<Result> EnsureWarehouseAsync()
     {
         var role = HttpContext.Session.GetString("UserRole");
-        if (role == "Warehouse" || role == "Admin")
-        {
-            // Simulate login for service layer
-            var login = HttpContext.Session.GetString("UserLogin")!;
-            var user = _repo.GetUserByLogin(login);
-            if (user != null) _identity.Login(login, user.PasswordHash);
-            return true;
-        }
-        return false;
+        if (role != "Warehouse" && role != "Admin") return Result.Failure("Forbidden");
+
+        var login = HttpContext.Session.GetString("UserLogin");
+        if (login == null) return Result.Failure("Unauthorized");
+
+        var user = await repo.GetUserByLoginAsync(login);
+        if (user == null) return Result.Failure("Unauthorized");
+
+        await identity.LoginAsync(login, user.PasswordHash);
+        return Result.Success();
     }
 
     [HttpGet("pending")]
-    public IActionResult GetPending()
+    public async Task<IActionResult> GetPending()
     {
-        if (!EnsureWarehouse()) return Forbid();
+        var auth = await EnsureWarehouseAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        try
+        var result = await warehouseService.GetPendingShipmentsAsync();
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        var orders = result.Value!;
+        var parts = await repo.GetAllPartsAsync();
+        var customers = await repo.GetAllCustomersAsync();
+
+        var enriched = orders.Select(o =>
         {
-            var orders = _warehouseService.GetPendingShipments();
-            var enriched = orders.Select(o =>
+            var part = parts.FirstOrDefault(p => p.Id == o.PartId);
+            var customer = customers.FirstOrDefault(c => c.Id == o.CustomerId);
+            return new
             {
-                var part = _repo.GetPartById(o.PartId);
-                var customer = _repo.GetAllCustomers().FirstOrDefault(c => c.Id == o.CustomerId);
-                return new
-                {
-                    o.Id, o.CustomerId, o.PartId, o.Quantity, o.TotalPrice,
-                    o.Urgent, o.Status, o.OrderDate,
-                    PartName = part?.Name ?? "—",
-                    PartArticle = part?.Article ?? "—",
-                    CustomerName = customer?.FullName ?? "—"
-                };
-            }).ToList();
+                o.Id, o.CustomerId, o.PartId, o.Quantity, o.TotalPrice,
+                o.Urgent, o.Status, o.OrderDate,
+                PartName = part?.Name ?? "—",
+                PartArticle = part?.Article ?? "—",
+                CustomerName = customer?.FullName ?? "—"
+            };
+        }).ToList();
 
-            return Ok(enriched);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return Ok(enriched);
     }
 
     [HttpPost("shipment/{id}")]
-    public IActionResult RegisterShipment(int id)
+    public async Task<IActionResult> RegisterShipment(int id)
     {
-        if (!EnsureWarehouse()) return Forbid();
+        var auth = await EnsureWarehouseAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        try
-        {
-            _warehouseService.RegisterShipment(id);
-            return Ok(new { message = "Отгрузка зарегистрирована" });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await warehouseService.RegisterShipmentAsync(id);
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        return Ok(new { message = "Отгрузка зарегистрирована" });
     }
 
     [HttpPost("inventory")]
-    public IActionResult UpdateInventory([FromBody] InventoryRequest request)
+    public async Task<IActionResult> UpdateInventory([FromBody] InventoryRequest request)
     {
-        if (!EnsureWarehouse()) return Forbid();
+        var auth = await EnsureWarehouseAsync();
+        if (!auth.IsSuccess) return auth.Error == "Forbidden" ? Forbid() : Unauthorized();
 
-        try
-        {
-            _warehouseService.UpdateInventory(request.PartId, request.Quantity);
-            return Ok(new { message = "Остаток обновлён" });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await warehouseService.UpdateInventoryAsync(request.PartId, request.Quantity);
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+
+        return Ok(new { message = "Остаток обновлён" });
     }
 }
 
